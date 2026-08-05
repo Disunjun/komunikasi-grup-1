@@ -1,0 +1,4117 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#2563eb">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="KomGrup">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/icon-192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+    <title>Komunikasi Grup - Suara & Teks</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+        body { background: var(--bg); color: var(--text); min-height: 100vh; padding: 15px; transition: background 0.3s, color 0.3s; }
+        body { 
+            --bg: #0f172a; --text: #e2e8f0; --card: #1e293b; --card-border: #334155;
+            --input-bg: #0f172a; --input-border: #334155; --btn-primary: #2563eb;
+            --status-kuning: #854d0e; --status-hijau: #166534; --status-merah: #991b1b;
+            --status-biru: #1e40af; --status-abu: #475569; --status-ungu: #581c87;
+            --sidebar-bg: #1e293b; --chat-bg: #1e293b; --tree-bg: #0f172a;
+            --hover: #252f47; --muted: #94a3b8; --border: #334155;
+        }
+        body.light-mode {
+            --bg: #f1f5f9; --text: #1e293b; --card: #ffffff; --card-border: #cbd5e1;
+            --input-bg: #f8fafc; --input-border: #cbd5e1; --btn-primary: #2563eb;
+            --status-kuning: #fef3c7; --status-hijau: #dcfce7; --status-merah: #fee2e2;
+            --status-biru: #dbeafe; --status-abu: #f1f5f9; --status-ungu: #f3e8ff;
+            --sidebar-bg: #ffffff; --chat-bg: #ffffff; --tree-bg: #f8fafc;
+            --hover: #f1f5f9; --muted: #64748b; --border: #e2e8f0;
+        }
+        body.light-mode .kotak { background: var(--card); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        body.light-mode .sidebar { background: var(--card); }
+        body.light-mode .chat-area { background: var(--card); }
+        body.light-mode .grup { background: #f1f5f9; }
+        body.light-mode .channel { background: #e2e8f0; color: #334155; }
+        body.light-mode .channel:hover { background: #cbd5e1; }
+        body.light-mode .user-item { background: #f1f5f9; color: #334155; }
+        body.light-mode .log-area { background: #f8fafc; }
+        body.light-mode .tree { background: #f8fafc; }
+        body.light-mode .tree-group { background: #f1f5f9; color: #0ea5e9; }
+        body.light-mode .tree-channel { color: #2563eb; }
+        body.light-mode .tree-user { color: #475569; }
+        body.light-mode th { background: #e2e8f0; color: #1e40af; }
+        body.light-mode td { border-bottom-color: #e2e8f0; }
+        body.light-mode tr:hover td { background: #f8fafc; }
+        body.light-mode .modal { background: #ffffff; }
+        body.light-mode .stat-card { background: #ffffff; border-color: #e2e8f0; }
+        body.light-mode .chart-container { background: #f8fafc; border-color: #e2e8f0; }
+        body.light-mode .whisper-panel { background: #f8fafc; border-color: #e2e8f0; }
+        body.light-mode .floor-status { background: #f8fafc; border-color: #e2e8f0; }
+        body.light-mode .pesan-lain { background: #e2e8f0; color: #1e293b; }
+        body.light-mode .pengirim { color: #64748b; }
+        body.light-mode .empty-state { color: #94a3b8; }
+        body.light-mode .petunjuk { color: #64748b; }
+        body.light-mode .ptt-hint { color: #64748b; }
+        body.light-mode h1 { color: #0284c7; }
+        body.light-mode h2 { color: #2563eb; }
+        body.light-mode h3 { color: #1d4ed8; }
+        body.light-mode h4 { color: #64748b; }
+        body.light-mode .tab { background: #e2e8f0; color: #64748b; }
+        body.light-mode .tab:hover { background: #cbd5e1; }
+        body.light-mode .tab-aktif { background: #2563eb !important; color: white !important; }
+        body.light-mode .toast { box-shadow: 0 10px 15px -3px rgba(0,0,0,0.15); }
+
+        .theme-toggle {
+            position: fixed; top: 15px; right: 15px; z-index: 100;
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 50%; width: 42px; height: 42px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; font-size: 20px; transition: 0.2s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        .theme-toggle:hover { transform: scale(1.1); }
+        body.light-mode .theme-toggle { box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1 { text-align: center; color: #38bdf8; margin-bottom: 20px; font-size: 1.8rem; }
+        h2 { color: #93c5fd; margin-bottom: 15px; font-size: 1.3rem; }
+        h3 { color: #bfdbfe; margin-bottom: 10px; font-size: 1.1rem; }
+        h4 { color: #94a3b8; margin: 15px 0 8px; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        .status { padding: 10px 14px; border-radius: 8px; margin-bottom:10px; font-weight:bold; font-size:14px; line-height:1.5; }
+        .status-kuning { background:var(--status-kuning); color: var(--text); }
+        .status-hijau { background:var(--status-hijau); color: var(--text); }
+        .status-merah { background:var(--status-merah); color: var(--text); }
+        .status-biru { background:var(--status-biru); color: var(--text); }
+        .status-abu { background:var(--status-abu); color: var(--text); }
+        .status-ungu { background:var(--status-ungu); color: var(--text); }
+
+        .kotak { background: var(--card); padding: 25px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3); }
+        input, select { width: 100%; padding: 12px; margin: 6px 0; border: 1px solid #334155; border-radius: 8px; font-size: 15px; background: var(--input-bg); color: var(--text); }
+        input:focus, select:focus { outline: none; border-color: #38bdf8; box-shadow: 0 0 0 3px rgba(56,189,248,0.15); }
+        .btn { background: #2563eb; color: white; border: none; padding: 10px 18px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: all 0.2s; margin: 3px; font-size: 14px; }
+        .btn:hover { background: #1d4ed8; transform: translateY(-1px); }
+        .btn:active { transform: translateY(0); }
+        .btn-merah { background: #dc2626; }
+        .btn-merah:hover { background: #b91c1c; }
+        .btn-hijau { background: #16a34a; }
+        .btn-hijau:hover { background: #15803d; }
+        .btn-kuning { background: #ca8a04; }
+        .btn-kuning:hover { background: #a16207; }
+        .btn-ungu { background: #9333ea; }
+        .btn-ungu:hover { background: #7e22ce; }
+        .btn-abu { background: #475569; }
+        .btn-abu:hover { background: #334155; }
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+
+        .halaman { display: none; }
+        .aktif { display: block; }
+        .grup { background: #334155; padding: 12px; border-radius: 8px; margin-bottom: 10px; }
+        .channel { background: #475569; padding: 8px 12px; margin: 5px 0; border-radius: 6px; cursor: pointer; transition:0.2s; display: flex; align-items: center; justify-content: space-between; }
+        .channel:hover { background: #64748b; padding-left:16px; }
+        .channel-locked { opacity: 0.6; border-left: 3px solid #ef4444; }
+        .channel-muted { opacity: 0.7; border-left: 3px solid #f59e0b; }
+        .petunjuk { font-size: 13px; color: #94a3b8; margin-top: 5px; }
+        .baris { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .baris input, .baris select { flex: 1; min-width:200px; }
+
+        .main-grid { display: grid; grid-template-columns: 280px 1fr; gap: 15px; margin-top:15px; }
+        @media (max-width: 768px) { .main-grid { grid-template-columns: 1fr; } }
+        .sidebar { background: var(--sidebar-bg); border-radius: 12px; padding: 15px; }
+        .chat-area { background: var(--chat-bg); border-radius: 12px; padding: 15px; display: flex; flex-direction: column; height: 75vh; }
+        .user-list { margin-top: 10px; }
+        .user-item { padding: 8px; margin: 4px 0; border-radius: 6px; background: #334155; display: flex; align-items: center; gap: 8px; font-size:14px; }
+        .mic-dot { width: 10px; height: 10px; border-radius: 50%; background: #ef4444; flex-shrink:0; transition: 0.3s; }
+        .mic-on { background: #22c55e; box-shadow:0 0 8px #22c55e; }
+        .mic-talking { background: #f59e0b; box-shadow:0 0 10px #f59e0b; animation: pulse 1s infinite; }
+        @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.3)} }
+        .chat-box { flex:1; overflow-y:auto; padding:10px 0; margin-bottom:10px; }
+        .pesan { margin:6px 0; padding:8px 12px; border-radius:8px; max-width:85%; word-break: break-word; }
+        .pesan-saya { background:#2563eb; margin-left:auto; }
+        .pesan-lain { background:#334155; margin-right:auto; }
+        .pengirim { font-size:12px; color:#94a3b8; margin-bottom:2px; }
+        .input-group { display:flex; gap:8px; }
+        .input-group input { flex:1; padding:10px; border-radius:8px; border:none; font-size:15px; }
+        .log-area { background:#1e293b; padding:12px; border-radius:8px; margin-top:10px; max-height:180px; overflow-y:auto; font-size:13px; }
+        .log-item { padding:4px 0; border-bottom:1px solid #334155; }
+
+        /* ========== ADMIN PANEL STYLES ========== */
+        .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+        .admin-badge { background: #7e22ce; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+
+        .tabs { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 2px solid #334155; padding-bottom: 0; flex-wrap: wrap; }
+        .tab { padding: 10px 20px; cursor: pointer; border-radius: 8px 8px 0 0; background: #1e293b; color: #94a3b8; font-weight: 600; font-size: 14px; border: none; transition: 0.2s; }
+        .tab:hover { background: #334155; color: #e2e8f0; }
+        .tab-aktif { background: #2563eb !important; color: white !important; }
+        .tab-content { display: none; }
+        .tab-content-aktif { display: block; }
+
+        .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
+        .toolbar h3 { margin: 0; }
+
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th { background: #334155; color: #93c5fd; padding: 12px; text-align: left; font-weight: 600; }
+        td { padding: 10px 12px; border-bottom: 1px solid #334155; }
+        tr:hover td { background: #252f47; }
+        .badge { padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: bold; display: inline-block; }
+        .badge-aktif { background: #166534; color: #dcfce7; }
+        .badge-nonaktif { background: #475569; color: #cbd5e1; }
+        .badge-banned { background: #991b1b; color: #fee2e2; }
+        .badge-muted { background: #854d0e; color: #fef3c7; }
+        .badge-locked { background: #7e22ce; color: #f3e8ff; }
+        .badge-prefix { background: #0e7490; color: #cffafe; }
+        .badge-maxuser { background: #be185d; color: #fce7f3; }
+        .badge-online { background: #166534; color: #dcfce7; }
+        .badge-offline { background: #475569; color: #94a3b8; }
+
+        .aksi-btns { display: flex; gap: 4px; flex-wrap: wrap; }
+        .aksi-btns .btn { padding: 5px 10px; font-size: 12px; margin: 2px; }
+
+        /* Tree View */
+        .tree { list-style: none; padding-left: 0; }
+        .tree-item { margin: 4px 0; }
+        .tree-group { font-weight: bold; color: #38bdf8; font-size: 15px; padding: 8px; background: #1e293b; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+        .tree-group:hover { background: #252f47; }
+        .tree-channels { list-style: none; padding-left: 28px; margin-top: 4px; }
+        .tree-channel { color: #bfdbfe; font-size: 14px; padding: 6px; border-radius: 4px; display: flex; align-items: center; gap: 6px; }
+        .tree-channel:hover { background: #252f47; }
+        .tree-users { list-style: none; padding-left: 24px; margin-top: 2px; }
+        .tree-user { color: #cbd5e1; font-size: 13px; padding: 4px 6px; border-radius: 4px; display: flex; align-items: center; gap: 6px; }
+        .tree-user:hover { background: #252f47; }
+        .talking-indicator { color: #f59e0b; font-weight: bold; animation: pulse 1.2s infinite; }
+        .tree-toggle { cursor: pointer; user-select: none; width: 16px; text-align: center; }
+
+        /* Modal */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(4px); }
+        .modal-overlay.aktif { display: flex; }
+        .modal { background: #1e293b; padding: 25px; border-radius: 12px; width: 90%; max-width: 450px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5); }
+        .modal h3 { margin-bottom: 15px; color: #38bdf8; }
+        .modal-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+        .modal-close { position: absolute; top: 15px; right: 15px; background: none; border: none; color: #94a3b8; font-size: 20px; cursor: pointer; }
+        .modal-close:hover { color: white; }
+
+        /* Toast */
+        .toast-container { position: fixed; top: 20px; right: 20px; z-index: 2000; display: flex; flex-direction: column; gap: 8px; }
+        .toast { padding: 12px 18px; border-radius: 8px; color: white; font-size: 14px; font-weight: 500; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.4); animation: slideIn 0.3s ease; max-width: 320px; }
+        .toast-hijau { background: #16a34a; }
+        .toast-merah { background: #dc2626; }
+        .toast-kuning { background: #ca8a04; }
+        .toast-biru { background: #2563eb; }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+
+        /* Stats cards */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 20px; }
+        .stat-card { background: #1e293b; padding: 16px; border-radius: 10px; text-align: center; border: 1px solid #334155; }
+        .stat-number { font-size: 28px; font-weight: bold; color: #38bdf8; }
+        .stat-label { font-size: 12px; color: #94a3b8; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        .empty-state { text-align: center; padding: 40px; color: #64748b; font-size: 14px; }
+        .empty-state-icon { font-size: 40px; margin-bottom: 10px; }
+
+
+        /* PTT & Floor Control */
+        .ptt-btn {
+            width: 100%;
+            padding: 16px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 12px;
+            border: 3px solid #334155;
+            background: #1e293b;
+            color: #94a3b8;
+            cursor: pointer;
+            transition: all 0.15s;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+            margin-bottom: 10px;
+        }
+        .ptt-btn:hover { border-color: #475569; }
+        .ptt-btn:active, .ptt-btn.ptt-active {
+            background: #166534;
+            border-color: #22c55e;
+            color: white;
+            box-shadow: 0 0 20px rgba(34,197,94,0.3);
+            transform: scale(0.98);
+        }
+        .ptt-btn.ptt-waiting {
+            background: #854d0e;
+            border-color: #f59e0b;
+            color: white;
+            animation: pulse 1s infinite;
+        }
+        .ptt-hint {
+            font-size: 11px;
+            color: #64748b;
+            text-align: center;
+            margin-top: 4px;
+        }
+        .floor-status {
+            background: #0f172a;
+            padding: 10px 14px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            font-size: 13px;
+            border: 1px solid #334155;
+        }
+        .floor-talking { color: #22c55e; font-weight: bold; }
+        .floor-waiting { color: #f59e0b; }
+        .floor-idle { color: #64748b; }
+        .floor-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+        .floor-dot-talking { background: #22c55e; box-shadow: 0 0 8px #22c55e; animation: pulse 1s infinite; }
+        .floor-dot-waiting { background: #f59e0b; }
+        .floor-dot-idle { background: #475569; }
+        .user-talking { background: #166534 !important; border-left: 3px solid #22c55e; }
+        .user-waiting { background: #854d0e !important; border-left: 3px solid #f59e0b; }
+        .user-idle { background: #334155; }
+
+
+        /* Priority PTT */
+        .ptt-btn.ptt-priority {
+            background: #7e22ce;
+            border-color: #a855f7;
+            color: white;
+            box-shadow: 0 0 20px rgba(168,85,247,0.4);
+        }
+        .ptt-btn.ptt-priority:active, .ptt-btn.ptt-priority.ptt-active {
+            background: #581c87;
+            border-color: #d8b4fe;
+            box-shadow: 0 0 25px rgba(216,180,254,0.5);
+        }
+        .priority-badge {
+            background: #7e22ce;
+            color: #f3e8ff;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: bold;
+            margin-left: 6px;
+        }
+
+        /* Whisper Mode */
+        .whisper-panel {
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        .whisper-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            color: #94a3b8;
+        }
+        .whisper-toggle input { width: auto; margin: 0; }
+        .whisper-target {
+            margin-top: 8px;
+        }
+        .whisper-indicator {
+            color: #a855f7;
+            font-size: 12px;
+            font-weight: bold;
+            text-align: center;
+            padding: 4px;
+            background: #3b0764;
+            border-radius: 6px;
+            margin-top: 6px;
+            display: none;
+        }
+        .whisper-indicator.aktif { display: block; }
+
+        /* Timeout indicator */
+        .timeout-bar {
+            width: 100%;
+            height: 4px;
+            background: #334155;
+            border-radius: 2px;
+            margin-top: 6px;
+            overflow: hidden;
+        }
+        .timeout-fill {
+            height: 100%;
+            background: #22c55e;
+            border-radius: 2px;
+            transition: width 1s linear;
+            width: 100%;
+        }
+        .timeout-fill.timeout-warning { background: #f59e0b; }
+        .timeout-fill.timeout-danger { background: #ef4444; }
+
+
+        /* Charts */
+        .chart-container { background: #0f172a; border-radius: 10px; padding: 16px; margin-bottom: 16px; border: 1px solid #334155; }
+        .chart-title { font-size: 14px; color: #94a3b8; margin-bottom: 12px; font-weight: 600; }
+        .chart-canvas { width: 100%; height: 220px; }
+        .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        @media (max-width: 768px) { .chart-grid { grid-template-columns: 1fr; } }
+        .chart-legend { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 10px; font-size: 12px; }
+        .chart-legend-item { display: flex; align-items: center; gap: 6px; }
+        .chart-dot { width: 10px; height: 10px; border-radius: 3px; }
+        .network-speed { font-size: 13px; color: #22c55e; font-weight: bold; margin-left: 10px; }
+        .network-speed.slow { color: #f59e0b; }
+        .network-speed.bad { color: #ef4444; }
+
+        /* Connection status improvements */
+        .status { padding: 10px 14px; border-radius: 8px; margin-bottom:10px; font-weight:bold; font-size:14px; line-height:1.5; transition: all 0.3s ease; }
+        .status-kuning { background:var(--status-kuning); color: var(--text); border-left: 4px solid #ca8a04; }
+        .status-hijau { background:var(--status-hijau); color: var(--text); border-left: 4px solid #16a34a; }
+        .status-merah { background:var(--status-merah); color: var(--text); border-left: 4px solid #dc2626; }
+        .status-biru { background:var(--status-biru); color: var(--text); border-left: 4px solid #2563eb; }
+        .status-abu { background:var(--status-abu); color: var(--text); border-left: 4px solid #475569; }
+        .status-ungu { background:var(--status-ungu); color: var(--text); border-left: 4px solid #9333ea; }
+
+
+        /* Channel Recording */
+        .recording-panel { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin: 10px 0; }
+        .recording-panel.recording-active { border-color: #dc2626; box-shadow: 0 0 10px rgba(220,38,38,0.2); }
+        .rec-btn { width: 100%; padding: 10px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 14px; }
+        .rec-btn-start { background: #991b1b; color: white; }
+        .rec-btn-start:hover { background: #b91c1c; }
+        .rec-btn-stop { background: #166534; color: white; animation: pulse 1.5s infinite; }
+        .rec-btn-stop:hover { background: #15803d; }
+        .rec-list { margin-top: 10px; max-height: 200px; overflow-y: auto; }
+        .rec-item { background: var(--hover); padding: 8px 10px; border-radius: 6px; margin: 4px 0; font-size: 12px; display: flex; justify-content: space-between; align-items: center; }
+        .rec-item-name { font-weight: 600; color: var(--text); }
+        .rec-item-meta { color: var(--muted); font-size: 11px; }
+        .rec-item-actions { display: flex; gap: 4px; }
+        .rec-timer { text-align: center; font-size: 18px; font-weight: bold; color: #ef4444; margin: 6px 0; font-family: monospace; }
+        .rec-indicator { display: inline-block; width: 8px; height: 8px; background: #ef4444; border-radius: 50%; margin-right: 6px; animation: pulse 1s infinite; }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+    
+        /* ========== FLOATING DEBUG BUTTON & PANEL ========== */
+        #debugFab {
+            position: fixed;
+            right: 14px;
+            bottom: 14px;
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            border: 1px solid #475569;
+            background: #0f172a;
+            color: #22c55e;
+            font-size: 19px;
+            font-weight: 800;
+            cursor: pointer;
+            z-index: 9998;
+            box-shadow: 0 6px 20px rgba(0,0,0,.45);
+            -webkit-tap-highlight-color: transparent;
+        }
+        #debugFab:active { transform: scale(.94); }
+        #debugPanel {
+            display: none;
+            position: fixed;
+            right: 12px;
+            bottom: 70px;
+            width: min(390px, calc(100vw - 24px));
+            max-height: 72vh;
+            overflow: auto;
+            z-index: 9999;
+            background: #0b1220;
+            color: #e2e8f0;
+            border: 1px solid #334155;
+            border-radius: 14px;
+            box-shadow: 0 12px 35px rgba(0,0,0,.55);
+            padding: 12px;
+            text-align: left;
+        }
+        #debugPanel.aktif { display: block; }
+        .debug-head {
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:8px;
+            margin-bottom:10px;
+        }
+        .debug-head strong { color:#22c55e; }
+        .debug-actions { display:flex; gap:6px; }
+        .debug-mini-btn {
+            border:1px solid #475569;
+            background:#1e293b;
+            color:#fff;
+            border-radius:8px;
+            padding:6px 9px;
+            font-size:12px;
+            cursor:pointer;
+        }
+        #debugOutput {
+            margin:0;
+            white-space:pre-wrap;
+            word-break:break-word;
+            font:12px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            color:#cbd5e1;
+        }
+        .debug-ok { color:#22c55e; }
+        .debug-bad { color:#ef4444; }
+
+</style>
+<base target="_blank">
+</head>
+<body>
+<div class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Ganti Tema">🌙</div>
+<div class="container">
+    <h1>📢 Sistem Komunikasi Grup</h1>
+
+    <!-- ========== HALAMAN MASUK ========== -->
+    <div id="halamanMasuk" class="halaman aktif">
+        <div class="kotak">
+            <h2>📝 Daftar Pengguna Baru</h2>
+            <input type="text" id="regNama" placeholder="Nama Lengkap">
+            <input type="password" id="regPass" placeholder="Buat Kata Sandi">
+            <button class="btn btn-hijau" onclick="daftarAkun()">Daftar Sekarang</button>
+            <div class="petunjuk">Data tersimpan aman di perangkat Anda</div>
+        </div>
+
+        <div class="kotak">
+            <h2>🔐 Masuk ke Sistem</h2>
+            <input type="text" id="loginNama" placeholder="Nama Lengkap">
+            <input type="password" id="loginPass" placeholder="Kata Sandi">
+            <button class="btn" onclick="masukSistem()">Masuk</button>
+            <div class="petunjuk" style="margin-top:8px;">Berkomunikasi Dengan Bijak</div>
+        </div>
+    </div>
+
+    <!-- ========== HALAMAN ADMIN ========== -->
+    <div id="halamanAdmin" class="halaman">
+        <div class="kotak">
+            <div class="admin-header">
+                <div>
+                    <h2>⚙️ Panel Admin</h2>
+                    <div style="font-size:13px;color:#94a3b8;">Selamat datang, <b>Didik Suntoro</b> <span class="admin-badge">ADMIN</span></div>
+                </div>
+                <button class="btn btn-merah" onclick="keluarSistem()">🚪 Keluar</button>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="statTotalUsers">0</div>
+                    <div class="stat-label">Total Users</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="statOnlineUsers">0</div>
+                    <div class="stat-label">Online</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="statTotalGroups">0</div>
+                    <div class="stat-label">Grup</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="statTotalChannels">0</div>
+                    <div class="stat-label">Channel</div>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="tabs">
+                <button class="tab tab-aktif" onclick="pilihTab('users')" id="tab-users">👥 Users</button>
+                <button class="tab" onclick="pilihTab('groups')" id="tab-groups">📁 Groups</button>
+                <button class="tab" onclick="pilihTab('channels')" id="tab-channels">🔊 Channels</button>
+                <button class="tab" onclick="pilihTab('monitoring')" id="tab-monitoring">📡 Monitoring</button>
+                <button class="tab" onclick="pilihTab('audit')" id="tab-audit">📋 Audit Log</button>
+                <button class="tab" onclick="pilihTab('statistik')" id="tab-statistik">📊 Statistik</button>
+            </div>
+
+            <!-- Tab Users -->
+            <div id="content-users" class="tab-content tab-content-aktif">
+                <div class="toolbar">
+                    <h3>Manajemen Pengguna</h3>
+                    <button class="btn btn-hijau" onclick="bukaModal('modalBuatUser')">+ Buat User</button>
+                </div>
+                <div style="overflow-x:auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nama</th>
+                                <th>Status</th>
+                                <th>Banned</th>
+                                <th>Muted</th>
+                                <th>Dibuat Oleh</th>
+                                <th>Tanggal</th>
+                                <th style="min-width:280px;">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelUsers"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tab Groups -->
+            <div id="content-groups" class="tab-content">
+                <div class="toolbar">
+                    <h3>Manajemen Grup</h3>
+                    <button class="btn btn-hijau" onclick="bukaModal('modalBuatGroup')">+ Buat Group</button>
+                </div>
+                <div style="overflow-x:auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nama Grup</th>
+                                <th>Status</th>
+                                <th>Jumlah Channel</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelGroups"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tab Channels -->
+            <div id="content-channels" class="tab-content">
+                <div class="toolbar">
+                    <h3>Manajemen Channel</h3>
+                    <button class="btn btn-hijau" onclick="bukaModal('modalBuatChannel')">+ Buat Channel</button>
+                </div>
+                <div style="overflow-x:auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Grup</th>
+                                <th>Channel</th>
+                                <th>Max User</th>
+                                <th>PTT Timeout</th>
+                                <th>Status</th>
+                                <th>Locked</th>
+                                <th>Muted</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelChannels"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tab Monitoring -->
+            <div id="content-monitoring" class="tab-content">
+                <div class="toolbar">
+                    <h3>📡 Monitoring Online Users</h3>
+                    <div>
+                        <button class="btn" onclick="refreshMonitoring()">🔄 Refresh</button>
+                        <button class="btn btn-kuning" onclick="bersihkanSession()">🧹 Bersihkan Session</button>
+                    </div>
+                </div>
+                <div id="monitoringTree" style="background:var(--tree-bg); padding:15px; border-radius:8px; min-height:200px;">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📡</div>
+                        <div>Memuat data monitoring...</div>
+                    </div>
+                </div>
+                <div style="margin-top:10px; font-size:12px; color:#64748b;">
+                    Auto-refresh setiap 5 detik. 🎙️ = sedang bicara | 🔒 = channel terkunci | 🔇 = channel muted
+                </div>
+            </div>
+
+            <!-- Tab Audit Log -->
+            <div id="content-audit" class="tab-content">
+                <div class="toolbar">
+                    <h3>📋 Audit Log Admin</h3>
+                    <div>
+                        <button class="btn" onclick="renderAudit()">🔄 Refresh</button>
+                        <button class="btn btn-ungu" onclick="eksporLogAdmin()">📤 Ekspor Log</button>
+                        <button class="btn btn-merah" onclick="bersihkanAudit()">🗑️ Bersihkan Log</button>
+                    </div>
+                </div>
+                <div style="overflow-x:auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="min-width:140px;">Waktu</th>
+                                <th>Admin</th>
+                                <th>Aksi</th>
+                                <th>Target</th>
+                                <th>Detail</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelAudit"></tbody>
+                    </table>
+                </div>
+                <div style="margin-top:10px; font-size:12px; color:#64748b;">
+                    Menyimpan maksimal 500 catatan. Semua aksi admin tercatat otomatis.
+                </div>
+            </div>
+
+            <!-- Tab Statistik -->
+            <div id="content-statistik" class="tab-content">
+                <div class="toolbar">
+                    <h3>📊 Statistik Penggunaan</h3>
+                    <button class="btn" onclick="renderStatistik()">🔄 Refresh</button>
+                </div>
+                <div class="chart-grid">
+                    <div class="chart-container">
+                        <div class="chart-title">👥 User per Channel</div>
+                        <canvas id="chartChannel" class="chart-canvas" height="220"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart-title">📁 User per Group</div>
+                        <canvas id="chartGroup" class="chart-canvas" height="220"></canvas>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-title">📈 Aktivitas per Bulan (12 Bulan Terakhir)</div>
+                    <canvas id="chartBulan" class="chart-canvas" height="220"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== HALAMAN DAFTAR GRUP (USER) ========== -->
+    <div id="halamanDaftar" class="halaman">
+        <div class="kotak">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <h2>📋 Daftar Grup & Channel</h2>
+                <button class="btn btn-merah" onclick="keluarSistem()">🚪 Keluar Akun</button>
+            </div>
+            <div id="daftarGrupTampil"></div>
+        </div>
+    </div>
+
+    <!-- ========== HALAMAN OBROLAN ========== -->
+    <div id="halamanObrolan" class="halaman">
+        <div class="kotak" style="padding:15px;">
+            <div class="baris" style="justify-content:space-between;">
+                <div>
+                    <h3 id="namaChannelAktif">Channel Aktif</h3>
+                    <div id="statusKoneksi" class="status status-kuning">🔌 Langkah 1/4: Menghubung ke server...</div>
+                    <div id="idSaya" style="font-size:12px;margin-top:4px;color:#94a3b8;"></div>
+                    <div id="jumlahPengguna" style="font-size:12px;margin-top:2px;color:#94a3b8;"></div>
+                    <div id="infoChannel" style="font-size:12px;margin-top:2px;color:#f59e0b;"></div>
+                    <div id="networkSpeed" style="font-size:12px;margin-top:2px;color:#22c55e;">📡 Network: -- kb/s</div>
+                </div>
+                <button class="btn btn-merah" onclick="keluarChannel()">⬅️ Kembali</button>
+            </div>
+        </div>
+        <div class="main-grid">
+            <div class="sidebar">
+                <div class="floor-status" id="floorStatusDisplay">
+                    <span class="floor-dot floor-dot-idle"></span>
+                    <span class="floor-idle">Tidak ada yang bicara</span>
+                </div>
+
+                <!-- Whisper Panel -->
+                <div class="whisper-panel" id="whisperPanel">
+                    <label class="whisper-toggle">
+                        <input type="checkbox" id="whisperToggle" onchange="toggleWhisperMode()">
+                        <span>🔒 Whisper Mode</span>
+                    </label>
+                    <div class="whisper-target" id="whisperTargetBox" style="display:none;">
+                        <select id="whisperTargetSelect" style="font-size:13px;padding:8px;" onchange="onWhisperTargetChange()">
+                            <option value="">-- Pilih Target --</option>
+                        </select>
+                    </div>
+                    <div class="whisper-indicator" id="whisperIndicator">🔒 Whisper aktif</div>
+                </div>
+
+                <button class="ptt-btn" id="tombolPTT" 
+                    onmousedown="pttDown()" onmouseup="pttUp()" onmouseleave="pttUp()"
+                    ontouchstart="pttDown(event)" ontouchend="pttUp(event)"
+                >🎙️ Tahan untuk Bicara</button>
+                <div class="timeout-bar" id="timeoutBar" style="display:none;">
+                    <div class="timeout-fill" id="timeoutFill"></div>
+                </div>
+                <div class="ptt-hint">Desktop: tahan <b>SPACE</b> | Mobile: tahan tombol</div>
+
+                <!-- Recording Panel -->
+                <div class="recording-panel" id="recordingPanel">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                        <span style="font-size:13px; font-weight:600; color:var(--text);">📼 Channel Recording</span>
+                        <span id="recBadge" style="display:none;"><span class="rec-indicator"></span>REC</span>
+                    </div>
+                    <div class="rec-timer" id="recTimer" style="display:none;">00:00</div>
+                    <button class="rec-btn rec-btn-start" id="recBtn" onclick="toggleRecording()">🔴 Mulai Rekam</button>
+                    <div class="rec-list" id="recList"></div>
+                </div>
+
+                <h4>Pengguna Terhubung</h4>
+                <div class="user-list" id="daftarPengguna"></div>
+
+                <h4>📜 Log Masuk Channel</h4>
+                <div class="log-area" id="daftarLog"></div>
+            </div>
+
+            <div class="chat-area">
+                <div class="chat-box" id="kotakObrolan"></div>
+                <div class="input-group">
+                    <input type="text" id="inputPesan" placeholder="Ketik pesan..." onkeypress="if(event.key==='Enter') kirimPesan()">
+                    <button class="btn" onclick="kirimPesan()">Kirim</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== MODALS ADMIN ========== -->
+
+    <!-- Modal Buat User -->
+    <div class="modal-overlay" id="modalBuatUser">
+        <div class="modal">
+            <h3>+ Buat User Baru</h3>
+            <input type="text" id="modalNamaUser" placeholder="Nama Lengkap">
+            <input type="password" id="modalPassUser" placeholder="Kata Sandi">
+            <div class="modal-footer">
+                <button class="btn btn-abu" onclick="tutupModal('modalBuatUser')">Batal</button>
+                <button class="btn btn-hijau" onclick="simpanUserBaru()">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Edit User -->
+    <div class="modal-overlay" id="modalEditUser">
+        <div class="modal">
+            <h3>✏️ Edit User</h3>
+            <input type="text" id="editUserNama" readonly style="background:#334155;">
+            <select id="editUserStatus">
+                <option value="aktif">Aktif</option>
+                <option value="nonaktif">Nonaktif</option>
+            </select>
+            <select id="editUserBanned">
+                <option value="false">Tidak Banned</option>
+                <option value="true">Banned</option>
+            </select>
+            <select id="editUserMuted">
+                <option value="false">Tidak Muted</option>
+                <option value="true">Muted</option>
+            </select>
+            <div class="modal-footer">
+                <button class="btn btn-abu" onclick="tutupModal('modalEditUser')">Batal</button>
+                <button class="btn btn-hijau" onclick="simpanEditUser()">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Reset Password -->
+    <div class="modal-overlay" id="modalResetPass">
+        <div class="modal">
+            <h3>🔑 Reset Password</h3>
+            <input type="text" id="resetPassNama" readonly style="background:#334155;">
+            <input type="password" id="resetPassBaru" placeholder="Password Baru">
+            <div class="modal-footer">
+                <button class="btn btn-abu" onclick="tutupModal('modalResetPass')">Batal</button>
+                <button class="btn btn-hijau" onclick="simpanResetPass()">Reset</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Buat Group -->
+    <div class="modal-overlay" id="modalBuatGroup">
+        <div class="modal">
+            <h3>+ Buat Group Baru</h3>
+            <input type="text" id="modalNamaGroup" placeholder="Nama Group">
+            <input type="text" id="modalPrefixGroup" placeholder="Prefix Akses (kosong = semua user)" style="font-size:13px;">
+            <div class="petunjuk" style="margin:-4px 0 8px 0;">
+                <b>Cara kerja prefix:</b><br>
+                • Kosong = semua user bisa masuk<br>
+                • "Team-A-" = hanya user dengan nama <b>diawali</b> "Team-A-" yang bisa masuk<br>
+                • User tanpa prefix <b>tidak bisa</b> masuk ke Group/Channel ber-prefix<br>
+                • User dengan prefix <b>bisa</b> masuk ke Group/Channel tanpa prefix (public)
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-abu" onclick="tutupModal('modalBuatGroup')">Batal</button>
+                <button class="btn btn-hijau" onclick="simpanGroupBaru()">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Edit Group -->
+    <div class="modal-overlay" id="modalEditGroup">
+        <div class="modal">
+            <h3>✏️ Edit Group</h3>
+            <input type="text" id="editGroupNama" placeholder="Nama Group">
+            <input type="text" id="editGroupPrefix" placeholder="Prefix Akses (kosong = semua user)" style="font-size:13px;">
+            <select id="editGroupStatus">
+                <option value="aktif">Aktif</option>
+                <option value="nonaktif">Nonaktif</option>
+            </select>
+            <div class="modal-footer">
+                <button class="btn btn-abu" onclick="tutupModal('modalEditGroup')">Batal</button>
+                <button class="btn btn-hijau" onclick="simpanEditGroup()">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Buat Channel -->
+    <div class="modal-overlay" id="modalBuatChannel">
+        <div class="modal">
+            <h3>+ Buat Channel Baru</h3>
+            <select id="modalPilihGroup"></select>
+            <input type="text" id="modalNamaChannel" placeholder="Nama Channel">
+            <input type="text" id="modalPrefixChannel" placeholder="Prefix Akses (kosong = semua user)" style="font-size:13px;">
+            <div class="petunjuk" style="margin:-4px 0 8px 0;">
+                <b>Cara kerja prefix:</b><br>
+                • Kosong = semua user bisa masuk (override group prefix)<br>
+                • "Dev-" = hanya user dengan nama <b>diawali</b> "Dev-" yang bisa masuk<br>
+                • Channel prefix <b>优先</b> dari group prefix<br>
+                • User tanpa prefix <b>tidak bisa</b> masuk ke Channel ber-prefix
+            </div>
+            <input type="number" id="modalMaxUsersChannel" placeholder="Max User (0 = tanpa batas)" min="0" value="0" style="font-size:13px;">
+            <div class="petunjuk" style="margin:-4px 0 8px 0;">0 = tidak ada batas, 1-999 = batas jumlah user</div>
+            <input type="number" id="modalPttTimeout" placeholder="PTT Timeout detik (0 = tanpa batas)" min="0" value="30" style="font-size:13px;">
+            <div class="petunjuk" style="margin:-4px 0 8px 0;">0 = tidak ada batas, 1-300 = detik maksimal bicara per PTT</div>
+            <div class="modal-footer">
+                <button class="btn btn-abu" onclick="tutupModal('modalBuatChannel')">Batal</button>
+                <button class="btn btn-hijau" onclick="simpanChannelBaru()">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Rename Channel -->
+    <div class="modal-overlay" id="modalRenameChannel">
+        <div class="modal">
+            <h3>✏️ Edit Channel</h3>
+            <input type="text" id="renameChannelLama" readonly style="background:#334155;">
+            <input type="text" id="renameChannelBaru" placeholder="Nama Baru">
+            <input type="text" id="renameChannelPrefix" placeholder="Prefix Akses (kosong = semua user)" style="font-size:13px;">
+            <input type="number" id="renameChannelMaxUsers" placeholder="Max User (0 = tanpa batas)" min="0" style="font-size:13px;">
+            <input type="number" id="renameChannelPttTimeout" placeholder="PTT Timeout detik (0 = tanpa batas)" min="0" style="font-size:13px;">
+            <div class="modal-footer">
+                <button class="btn btn-abu" onclick="tutupModal('modalRenameChannel')">Batal</button>
+                <button class="btn btn-hijau" onclick="simpanEditChannel()">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+<script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+<script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+<script>
+
+// ========== KONFIGURASI & STATE ==========
+const ADMIN_NAMA = "Didik Suntoro";
+let userLoginPassword = "";
+let adminToken = sessionStorage.getItem("kgAdminToken") || "";
+let adminTokenExpiresAt = sessionStorage.getItem("kgAdminTokenExpiresAt") || "";
+let namaSaya = "", channelAktif = "", grupAktif = "", peer = null, koneksi = {}, streamSaya = null;
+let micAktif = true;
+let daftarNamaTerhubung = [];
+let floorState = { currentTalker: null, queue: [], lastUpdate: 0 };
+let myFloorStatus = 'idle'; // 'idle' | 'talking' | 'waiting'
+let pttPressed = false;
+let floorBroadcastInterval = null;
+let pttTimer = null;
+let timeoutInterval = null;
+let whisperMode = false;
+let whisperTarget = null;
+let pttTimeoutSeconds = 0;
+let isRecording = false;
+let mediaRecorder = null;
+let recordedChunks = [];
+let recordingStartTime = 0;
+let recordingTimerInterval = null;
+let audioContext = null;
+let destinationNode = null;
+let mixedStream = null;
+let adminTabAktif = 'users';
+let editUserTarget = null;
+let serverUsers = []; // PostgreSQL-backed user cache (admin UI only)
+let serverAuditLogs = []; // PostgreSQL-backed audit cache (admin UI only)
+let editGroupTarget = null;
+let editChannelTarget = { grupIdx: -1, chIdx: -1 };
+let heartbeatInterval = null;
+let monitoringInterval = null;
+
+// ========== REALTIME SERVER V2 ==========
+const REALTIME_SERVER_URL = window.REALTIME_SERVER_URL || "https://komunikasi-group-v2-production.up.railway.app";
+let socket = null;
+let channelCountSocket = null;
+let channelPresenceSessions = {};
+let serverSessions = {};
+let serverAdminStats = null;
+let serverActivityLogs = [];
+let peerIdSaya = null;
+let realtimeConnected = false;
+
+let turnIceServers = [];
+let turnConfigStatus = "NOT LOADED";
+let turnConfigError = "";
+let turnLoadedAt = null;
+
+async function loadCloudflareTurnConfig() {
+    turnConfigStatus = "LOADING";
+    turnConfigError = "";
+    try {
+        const r = await fetch(`${REALTIME_SERVER_URL}/api/turn-credentials`, {
+            method: "GET",
+            headers: { "Accept": "application/json" },
+            cache: "no-store"
+        });
+        const data = await r.json().catch(() => null);
+        if (!r.ok || !data?.ok || !Array.isArray(data?.iceServers) || !data.iceServers.length) {
+            throw new Error(data?.message || `HTTP ${r.status}`);
+        }
+        turnIceServers = data.iceServers;
+        turnConfigStatus = "LOADED";
+        turnLoadedAt = new Date();
+        console.log(`[TURN] Cloudflare ICE loaded (${turnIceServers.length} servers)`);
+        return true;
+    } catch (e) {
+        turnIceServers = [];
+        turnConfigStatus = "FAILED";
+        turnConfigError = e?.message || String(e);
+        console.error("[TURN] Gagal memuat Cloudflare TURN:", turnConfigError);
+        return false;
+    }
+}
+
+
+// ========== PEERJS RECONNECT STATE (GLOBAL) ==========
+// Harus global karena dipakai saat masuk channel, reconnect, dan keluarChannel().
+let currentServerIndex = 0;
+let peerReconnectAttempts = 0;
+const MAX_RECONNECT_ATTEMPTS = 5;
+let peerReconnectTimer = null;
+
+// Peer-to-peer connection lifecycle state.
+// Mencegah koneksi ganda dan memungkinkan retry jika DataConnection macet/gagal.
+const peerConnecting = new Set();
+const peerConnectTimers = new Map();
+const PEER_CONNECT_TIMEOUT_MS = 10000;
+
+
+// ========== POSTGRESQL GROUP/CHANNEL SYNC ==========
+let centralGroups = null;
+let centralGroupsReady = false;
+let centralSaveTimer = null;
+
+async function muatGroupsPostgreSQL(silent = false) {
+    try {
+        const data = await apiRequest('/api/config/groups');
+        if(!data?.ok || !Array.isArray(data.groups)) throw new Error(data?.message || 'Format groups tidak valid');
+        centralGroups = data.groups;
+        centralGroupsReady = true;
+        localStorage.setItem('daftarGrup', JSON.stringify(centralGroups)); // cache/fallback
+        if(!silent) console.log(`[DBSYNC] ${centralGroups.length} group dimuat dari PostgreSQL`);
+        return centralGroups;
+    } catch(err) {
+        console.warn('[DBSYNC] GET groups gagal, memakai cache lokal:', err.message);
+        if(!centralGroups) {
+            try { centralGroups = JSON.parse(localStorage.getItem('daftarGrup') || '[]'); }
+            catch { centralGroups = []; }
+        }
+        return centralGroups;
+    }
+}
+
+async function simpanGroupsPostgreSQL(groups) {
+    centralGroups = JSON.parse(JSON.stringify(groups || []));
+    centralGroupsReady = true;
+    localStorage.setItem('daftarGrup', JSON.stringify(centralGroups)); // cache
+    const data = await apiRequest('/api/config/groups', {
+        method:'PUT',
+        body:JSON.stringify({groups:centralGroups})
+    }, true);
+    if(data?.ok && Array.isArray(data.groups)) {
+        centralGroups = data.groups;
+        localStorage.setItem('daftarGrup', JSON.stringify(centralGroups));
+    }
+    return centralGroups;
+}
+
+function jadwalkanSimpanGroups(groups) {
+    centralGroups = JSON.parse(JSON.stringify(groups || []));
+    centralGroupsReady = true;
+    localStorage.setItem('daftarGrup', JSON.stringify(centralGroups));
+    clearTimeout(centralSaveTimer);
+    centralSaveTimer = setTimeout(() => {
+        simpanGroupsPostgreSQL(centralGroups).catch(err => {
+            console.error('[DBSYNC] PUT groups gagal:', err);
+            toast(`❌ Sinkronisasi PostgreSQL gagal: ${err.message}`, 'merah', 5000);
+        });
+    }, 80);
+}
+
+// ========== LOCALSTORAGE HELPERS ==========
+function ambilData(kunci) {
+    if(kunci === 'daftarGrup' && centralGroups) return centralGroups;
+    const data = localStorage.getItem(kunci);
+    return data ? JSON.parse(data) : [];
+}
+function simpanData(kunci, data) {
+    try {
+        if(kunci === 'daftarGrup' && centralGroupsReady) {
+            jadwalkanSimpanGroups(data);
+            return true;
+        }
+        localStorage.setItem(kunci, JSON.stringify(data));
+        return true;
+    } catch(e) {
+        toast("Penyimpanan gagal: " + e.message, "merah");
+        return false;
+    }
+}
+
+// ========== MIGRASI DATA ==========
+function migrasiData() {
+    // Migrasi pengguna
+    let pengguna = ambilData("logPengguna");
+    if (pengguna.length > 0 && !pengguna[0].hasOwnProperty('status')) {
+        pengguna = pengguna.map(p => ({
+            nama: p.nama,
+            sandi: p.sandi,
+            status: "aktif",
+            banned: false,
+            muted: false,
+            dibuatOleh: "system",
+            tanggalDibuat: new Date().toLocaleDateString('id-ID')
+        }));
+        simpanData("logPengguna", pengguna);
+    }
+    // H2: Admin tidak lagi disimpan sebagai akun/password lokal. Autentikasi milik backend.
+
+    // Migrasi grup
+    let grup = ambilData("daftarGrup");
+    if (grup.length > 0 && typeof grup[0].channel[0] === 'string') {
+        grup = grup.map(g => ({
+            nama: g.nama,
+            status: "aktif",
+            channel: g.channel.map(c => ({
+                nama: c,
+                status: "aktif",
+                locked: false,
+                muted: false
+            }))
+        }));
+        simpanData("daftarGrup", grup);
+    }
+
+    // Init default jika kosong
+    if (!localStorage.getItem("daftarGrup") || ambilData("daftarGrup").length === 0) {
+        simpanData("daftarGrup", [
+            {nama:"Grup 1", prefix:"", status:"aktif", channel:[
+                {nama:"CH 01", prefix:"", maxUsers:0, pttTimeout:0, status:"aktif", locked:false, muted:false},
+                {nama:"CH 02", prefix:"", maxUsers:5, pttTimeout:30, status:"aktif", locked:false, muted:false},
+                {nama:"CH 03", prefix:"", maxUsers:0, pttTimeout:0, status:"aktif", locked:false, muted:false}
+            ]},
+            {nama:"Grup 2", prefix:"", status:"aktif", channel:[
+                {nama:"CH 01", prefix:"", maxUsers:0, pttTimeout:0, status:"aktif", locked:false, muted:false},
+                {nama:"CH 02", prefix:"", maxUsers:3, pttTimeout:15, status:"aktif", locked:false, muted:false}
+            ]}
+        ]);
+    }
+    if (!localStorage.getItem("logAktivitas")) simpanData("logAktivitas", []);
+    if (!localStorage.getItem("onlineSessions")) simpanData("onlineSessions", {});
+    if (!localStorage.getItem("kickedUsers")) simpanData("kickedUsers", []);
+}
+migrasiData();
+
+// ========== TOAST NOTIFICATION ==========
+function toast(pesan, tipe="biru", durasi=3000) {
+    const container = document.getElementById("toastContainer");
+    const el = document.createElement("div");
+    el.className = `toast toast-${tipe}`;
+    el.textContent = pesan;
+    container.appendChild(el);
+    setTimeout(() => {
+        el.style.animation = "fadeOut 0.3s ease forwards";
+        setTimeout(() => el.remove(), 300);
+    }, durasi);
+}
+
+// ========== MODAL HELPERS ==========
+function bukaModal(id) {
+    document.getElementById(id).classList.add("aktif");
+    if(id === 'modalBuatChannel') isiPilihanGroup();
+}
+function tutupModal(id) {
+    document.getElementById(id).classList.remove("aktif");
+    // Clear inputs
+    document.querySelectorAll(`#${id} input`).forEach(i => { if(!i.readOnly) i.value = ''; });
+}
+
+// ========== PAGE NAVIGATION ==========
+function tampilHalaman(id) { 
+    document.querySelectorAll(".halaman").forEach(h => h.classList.remove("aktif")); 
+    document.getElementById(id).classList.add("aktif"); 
+}
+async function keluarSistem() {
+    const wasAdmin = !!adminToken;
+    if(wasAdmin) {
+        try { await apiRequest('/api/admin/logout', { method:'POST' }, true); } catch(_) {}
+    }
+    adminToken = "";
+    adminTokenExpiresAt = "";
+    sessionStorage.removeItem("kgAdminToken");
+    sessionStorage.removeItem("kgAdminTokenExpiresAt");
+    namaSaya = "";
+    userLoginPassword = "";
+    if(monitoringInterval) clearInterval(monitoringInterval);
+    if(socket) { try { socket.disconnect(); } catch(_) {} }
+    if(channelCountSocket) { try { channelCountSocket.disconnect(); } catch(_) {} channelCountSocket = null; }
+    channelPresenceSessions = {};
+    tampilHalaman("halamanMasuk");
+    toast("Berhasil keluar", "hijau");
+}
+function kembaliKeMasuk() { tampilHalaman("halamanMasuk"); }
+
+// ========== AUTH & LOGIN (POSTGRESQL) ==========
+async function apiRequest(path, options = {}, admin = false) {
+    const headers = { "Content-Type": "application/json", ...(options.headers || {}) };
+    if(admin) {
+        if(!adminToken) throw new Error("Session Admin tidak tersedia. Silakan login kembali.");
+        headers["Authorization"] = `Bearer ${adminToken}`;
+    }
+    const response = await fetch(`${REALTIME_SERVER_URL}${path}`, { ...options, headers });
+    let data = {};
+    try { data = await response.json(); } catch(_) {}
+    if(response.status === 401 && admin) {
+        adminToken = "";
+        adminTokenExpiresAt = "";
+        sessionStorage.removeItem("kgAdminToken");
+        sessionStorage.removeItem("kgAdminTokenExpiresAt");
+        namaSaya = "";
+        if(socket) { try { socket.disconnect(); } catch(_) {} }
+        tampilHalaman("halamanMasuk");
+        throw new Error(data.message || "Session Admin berakhir. Silakan login kembali.");
+    }
+    if(!response.ok || data.ok === false) throw new Error(data.message || `HTTP ${response.status}`);
+    return data;
+}
+
+async function daftarAkun() {
+    const nama = document.getElementById("regNama").value.trim();
+    const sandi = document.getElementById("regPass").value;
+    if(!nama || !sandi) return toast("❌ Isi Nama dan Kata Sandi terlebih dahulu!", "merah");
+    if(nama.length < 2) return toast("❌ Nama minimal 2 karakter!", "merah");
+    if(sandi.length < 4) return toast("❌ Kata sandi minimal 4 karakter!", "merah");
+    try {
+        await apiRequest('/api/auth/register', { method:'POST', body:JSON.stringify({nama,sandi}) });
+        document.getElementById("regNama").value = "";
+        document.getElementById("regPass").value = "";
+        toast("✅ Berhasil Daftar ke server! Silakan masuk.", "hijau");
+    } catch(err) { toast(`❌ ${err.message}`, "merah"); }
+}
+
+async function masukSistem() {
+    const nama = document.getElementById("loginNama").value.trim();
+    const sandi = document.getElementById("loginPass").value;
+    if(!nama || !sandi) return toast("❌ Isi Nama dan Kata Sandi!", "merah");
+
+    // H2: UI tetap sama; password Admin diverifikasi hanya oleh backend.
+    if(nama === ADMIN_NAMA) {
+        try {
+            const data = await apiRequest('/api/admin/login', { method:'POST', body:JSON.stringify({nama,sandi}) });
+            adminToken = data.token;
+            adminTokenExpiresAt = data.expiresAt || "";
+            sessionStorage.setItem("kgAdminToken", adminToken);
+            sessionStorage.setItem("kgAdminTokenExpiresAt", adminTokenExpiresAt);
+            namaSaya = data.admin?.nama || nama;
+            tampilHalaman("halamanAdmin");
+            initAdminRealtimeSocket();
+            await renderAdminPanel();
+            toast("Selamat datang, Admin!", "hijau");
+            return;
+        } catch(err) {
+            adminToken = "";
+            adminTokenExpiresAt = "";
+            sessionStorage.removeItem("kgAdminToken");
+            sessionStorage.removeItem("kgAdminTokenExpiresAt");
+            namaSaya = "";
+            toast(`❌ ${err.message}`, "merah");
+            return;
+        }
+    }
+    try {
+        const data = await apiRequest('/api/auth/login', { method:'POST', body:JSON.stringify({nama,sandi}) });
+        userLoginPassword = sandi; // memory-only; tidak disimpan ke browser storage
+        namaSaya = data.user.nama;
+        tampilHalaman("halamanDaftar");
+        await muatGroupsPostgreSQL(true);
+        muatDaftarGrup();
+        toast(`Selamat datang, ${namaSaya}!`, "hijau");
+    } catch(err) {
+        namaSaya = "";
+        toast(`❌ ${err.message}`, "merah");
+    }
+}
+
+// ========== LOG FUNCTIONS ==========
+function catatLog(aksi, channel) {
+    const sekarang = new Date();
+    const tgl = sekarang.toLocaleDateString('id-ID');
+    const jam = sekarang.toLocaleTimeString('id-ID');
+    const log = ambilData("logAktivitas");
+    log.unshift({tgl, jam, nama:namaSaya, aksi, channel});
+    simpanData("logAktivitas", log.slice(0,200));
+    tampilLog();
+}
+function tampilLog() {
+    const wadah = document.getElementById("daftarLog");
+    if(!wadah) return;
+    wadah.innerHTML = "";
+    ambilData("logAktivitas").filter(l => l.channel === channelAktif).forEach(l => {
+        wadah.innerHTML += `<div class="log-item">[${l.tgl} ${l.jam}] - ${l.nama} - ${l.aksi} Channel</div>`;
+    });
+}
+
+// ========== THEME TOGGLE ==========
+function toggleTheme() {
+    const body = document.body;
+    const btn = document.getElementById("themeToggle");
+    const isLight = body.classList.toggle("light-mode");
+    btn.textContent = isLight ? "☀️" : "🌙";
+    btn.title = isLight ? "Mode Gelap" : "Mode Terang";
+    localStorage.setItem("theme", isLight ? "light" : "dark");
+}
+function loadTheme() {
+    const saved = localStorage.getItem("theme");
+    if(saved === "light") {
+        document.body.classList.add("light-mode");
+        const btn = document.getElementById("themeToggle");
+        if(btn) { btn.textContent = "☀️"; btn.title = "Mode Gelap"; }
+    }
+}
+
+// ========== SOUND EFFECTS ==========
+let audioCtx = null;
+function getAudioCtx() {
+    if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    return audioCtx;
+}
+function playBeep(freq = 800, duration = 0.15, type = 'sine', vol = 0.3) {
+    try {
+        const ctx = getAudioCtx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, ctx.currentTime);
+        gain.gain.setValueAtTime(vol, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + duration);
+    } catch(e) { /* Audio not supported or blocked */ }
+}
+function playFloorBeep() {
+    // Beep-beep! (two tones)
+    playBeep(880, 0.1, 'sine', 0.25);
+    setTimeout(() => playBeep(1100, 0.2, 'sine', 0.25), 120);
+}
+function playTimeoutWarningBeep() {
+    // Warning: lower pitch, longer
+    playBeep(600, 0.3, 'square', 0.2);
+}
+function playTimeoutDangerBeep() {
+    // Danger: rapid beeps
+    playBeep(400, 0.15, 'sawtooth', 0.25);
+    setTimeout(() => playBeep(400, 0.15, 'sawtooth', 0.25), 180);
+    setTimeout(() => playBeep(400, 0.15, 'sawtooth', 0.25), 360);
+}
+function playWhisperBeep() {
+    // Whisper: soft, high pitch
+    playBeep(1200, 0.08, 'sine', 0.15);
+    setTimeout(() => playBeep(1500, 0.12, 'sine', 0.15), 100);
+}
+
+// ========== ADMIN EXPORT LOG ==========
+function eksporLogAdmin() {
+    const audit = [...serverAuditLogs];
+    if(audit.length === 0) return toast("Belum ada catatan audit!", "kuning");
+
+    let isiTeks = `==================================================\n`;
+    isiTeks += `        CATATAN LOG AUDIT ADMIN\n`;
+    isiTeks += `Waktu Ekspor: ${new Date().toLocaleString('id-ID')}\n`;
+    isiTeks += `==================================================\n\n`;
+
+    audit.reverse().forEach(a => {
+        isiTeks += `Tanggal : ${a.tgl}\n`;
+        isiTeks += `Jam     : ${a.jam}\n`;
+        isiTeks += `Admin   : ${a.admin}\n`;
+        isiTeks += `Aksi    : ${a.aksi}\n`;
+        isiTeks += `Target  : ${a.target}\n`;
+        isiTeks += `Detail  : ${a.detail || '-'}\n`;
+        isiTeks += `----------------------------------------\n`;
+    });
+
+    const berkas = new Blob([isiTeks], {type:'text/plain'});
+    const tautan = document.createElement("a");
+    tautan.href = URL.createObjectURL(berkas);
+    tautan.download = `AuditLog_${new Date().toLocaleDateString('id-ID').replace(/\//g,"-")}.txt`;
+    tautan.click();
+    URL.revokeObjectURL(tautan.href);
+    toast("Audit log berhasil diekspor!", "hijau");
+}
+
+function eksporLog() {
+    const logChannel = ambilData("logAktivitas").filter(l => l.channel === channelAktif);
+    if(logChannel.length === 0) return toast("Belum ada catatan log untuk channel ini!", "kuning");
+
+    let isiTeks = `==================================================\n`;
+    isiTeks += `        CATATAN LOG AKTIVITAS CHANNEL\n`;
+    isiTeks += `Nama Channel: ${channelAktif}\n`;
+    isiTeks += `Waktu Ekspor: ${new Date().toLocaleString('id-ID')}\n`;
+    isiTeks += `==================================================\n\n`;
+
+    logChannel.reverse().forEach(l => {
+        isiTeks += `Tanggal : ${l.tgl}\n`;
+        isiTeks += `Jam     : ${l.jam}\n`;
+        isiTeks += `Nama    : ${l.nama}\n`;
+        isiTeks += `Status  : ${l.aksi} Channel\n`;
+        isiTeks += `----------------------------------------\n`;
+    });
+
+    const berkas = new Blob([isiTeks], {type:'text/plain'});
+    const tautan = document.createElement("a");
+    tautan.href = URL.createObjectURL(berkas);
+    tautan.download = `Log_${channelAktif.replace(/\s/g,"_")}_${new Date().toLocaleDateString('id-ID').replace(/\//g,"-")}.txt`;
+    tautan.click();
+    URL.revokeObjectURL(tautan.href);
+    toast("Log berhasil diekspor!", "hijau");
+}
+
+
+// ========== STAGE G3: REALTIME ADMIN SYNC ==========
+let adminRealtimeTimer = null;
+let adminRealtimeBusy = false;
+let adminRealtimePending = false;
+
+function scheduleAdminRealtimeSync(reason = "socket") {
+    clearTimeout(adminRealtimeTimer);
+    adminRealtimeTimer = setTimeout(() => runAdminRealtimeSync(reason), 180);
+}
+
+async function runAdminRealtimeSync(reason = "socket") {
+    if(adminRealtimeBusy) {
+        adminRealtimePending = true;
+        return;
+    }
+    adminRealtimeBusy = true;
+    try {
+        await loadServerAdminStats();
+        updateStats();
+        if(adminTabAktif === 'monitoring') refreshMonitoring();
+        if(adminTabAktif === 'statistik') {
+            renderChartChannel();
+            renderChartGroup();
+            renderChartBulan();
+        }
+        console.log("[G3] Realtime admin sync:", reason);
+    } catch(err) {
+        console.warn("[G3] Realtime admin sync gagal:", err);
+    } finally {
+        adminRealtimeBusy = false;
+        if(adminRealtimePending) {
+            adminRealtimePending = false;
+            scheduleAdminRealtimeSync("pending");
+        }
+    }
+}
+
+// ========== STAGE G2: CENTRALIZED MONITORING + STATISTICS ==========
+function normalizeServerSessions(input) {
+    if(Array.isArray(input)) return Object.fromEntries(input.filter(Boolean).map(s => [s.nama || s.socketId, s]));
+    if(input && typeof input === "object") return input;
+    return {};
+}
+
+async function loadServerAdminStats() {
+    const data = await apiRequest('/api/admin/stats', { method:'GET' }, true);
+    serverAdminStats = data || null;
+    serverActivityLogs = Array.isArray(data?.activity) ? data.activity : [];
+    if(Array.isArray(data?.sessions)) serverSessions = normalizeServerSessions(data.sessions);
+    return data;
+}
+
+// ========== ADMIN PANEL - TABS ==========
+function pilihTab(tab) {
+    adminTabAktif = tab;
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('tab-aktif'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('tab-content-aktif'));
+    document.getElementById('tab-' + tab).classList.add('tab-aktif');
+    document.getElementById('content-' + tab).classList.add('tab-content-aktif');
+
+    if(tab === 'users') renderUsers();
+    if(tab === 'groups') renderGroups();
+    if(tab === 'channels') renderChannels();
+    if(tab === 'monitoring') { refreshMonitoring(); startMonitoringAutoRefresh(); }
+    else stopMonitoringAutoRefresh();
+    if(tab === 'audit') renderAudit();
+    if(tab === 'statistik') renderStatistik();
+}
+
+function updateStats() {
+    const grup = ambilData("daftarGrup");
+    const totalCh = grup.reduce((sum, g) => sum + (Array.isArray(g.channel) ? g.channel.length : 0), 0);
+    const summary = serverAdminStats?.summary || {};
+
+    document.getElementById("statTotalUsers").textContent =
+        Number.isFinite(Number(summary.totalUsers)) ? Number(summary.totalUsers) : serverUsers.length;
+    document.getElementById("statOnlineUsers").textContent =
+        Number.isFinite(Number(summary.onlineUsers)) ? Number(summary.onlineUsers) : Object.keys(normalizeServerSessions(serverSessions)).length;
+    document.getElementById("statTotalGroups").textContent =
+        Number.isFinite(Number(summary.totalGroups)) ? Number(summary.totalGroups) : grup.length;
+    document.getElementById("statTotalChannels").textContent =
+        Number.isFinite(Number(summary.totalChannels)) ? Number(summary.totalChannels) : totalCh;
+}
+
+
+// ========== STATISTIK CHARTS ==========
+async function renderStatistik() {
+    try {
+        await loadServerAdminStats();
+        updateStats();
+    } catch(err) {
+        console.warn("[G2] Gagal load statistik server:", err);
+        toast(`❌ Statistik server: ${err.message}`, "merah", 5000);
+    }
+    renderChartChannel();
+    renderChartGroup();
+    renderChartBulan();
+}
+
+function renderChartChannel() {
+    const canvas = document.getElementById("chartChannel");
+    if(!canvas) return;
+    const ctx = canvas.getContext("2d");
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * 2;
+    canvas.height = 440;
+    ctx.scale(2, 2);
+
+    const w = rect.width;
+    const h = 220;
+    const padding = {top:20, right:20, bottom:40, left:50};
+    const chartW = w - padding.left - padding.right;
+    const chartH = h - padding.top - padding.bottom;
+
+    // PostgreSQL activity_logs: unique users per channel (12 bulan)
+    const logs = serverActivityLogs.filter(l => l.aksi === 'MASUK');
+    const channelData = {};
+    logs.forEach(l => {
+        if(!channelData[l.channel]) channelData[l.channel] = new Set();
+        channelData[l.channel].add(l.nama);
+    });
+    const labels = Object.keys(channelData);
+    const values = labels.map(l => channelData[l].size);
+
+    if(labels.length === 0) {
+        ctx.fillStyle = "#64748b";
+        ctx.font = "14px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("Belum ada data", w/2, h/2);
+        return;
+    }
+
+    const maxVal = Math.max(...values, 1);
+    const barW = Math.min(40, chartW / labels.length - 10);
+    const gap = (chartW - barW * labels.length) / (labels.length + 1);
+    const colors = ['#2563eb','#16a34a','#ca8a04','#9333ea','#dc2626','#0ea5e9','#ec4899','#14b8a6'];
+
+    ctx.clearRect(0, 0, w, h);
+
+    // Grid lines
+    ctx.strokeStyle = "#334155";
+    ctx.lineWidth = 0.5;
+    for(let i=0; i<=5; i++) {
+        const y = padding.top + chartH - (i/5)*chartH;
+        ctx.beginPath();
+        ctx.moveTo(padding.left, y);
+        ctx.lineTo(w - padding.right, y);
+        ctx.stroke();
+        ctx.fillStyle = "#64748b";
+        ctx.font = "10px sans-serif";
+        ctx.textAlign = "right";
+        ctx.fillText(Math.round(maxVal * i / 5), padding.left - 6, y + 3);
+    }
+
+    // Bars
+    labels.forEach((label, i) => {
+        const x = padding.left + gap + i * (barW + gap);
+        const barH = (values[i] / maxVal) * chartH;
+        const y = padding.top + chartH - barH;
+        const color = colors[i % colors.length];
+
+        ctx.fillStyle = color;
+        ctx.fillRect(x, y, barW, barH);
+
+        // Value on top
+        ctx.fillStyle = "#e2e8f0";
+        ctx.font = "bold 11px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(values[i], x + barW/2, y - 6);
+
+        // Label below
+        ctx.fillStyle = "#94a3b8";
+        ctx.font = "10px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(label.length > 10 ? label.substring(0,8)+'..' : label, x + barW/2, h - 10);
+    });
+}
+
+function renderChartGroup() {
+    const canvas = document.getElementById("chartGroup");
+    if(!canvas) return;
+    const ctx = canvas.getContext("2d");
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * 2;
+    canvas.height = 440;
+    ctx.scale(2, 2);
+
+    const w = rect.width;
+    const h = 220;
+    const padding = {top:20, right:20, bottom:40, left:50};
+    const chartW = w - padding.left - padding.right;
+    const chartH = h - padding.top - padding.bottom;
+
+    // PostgreSQL activity_logs: unique users per group (12 bulan)
+    const logs = serverActivityLogs.filter(l => l.aksi === 'MASUK');
+    const groupData = {};
+    logs.forEach(l => {
+        const gName = l.group || "Lainnya";
+        if(!groupData[gName]) groupData[gName] = new Set();
+        groupData[gName].add(l.nama);
+    });
+    const labels = Object.keys(groupData);
+    const values = labels.map(l => groupData[l].size);
+
+    if(labels.length === 0) {
+        ctx.fillStyle = "#64748b";
+        ctx.font = "14px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("Belum ada data", w/2, h/2);
+        return;
+    }
+
+    const maxVal = Math.max(...values, 1);
+    const barW = Math.min(40, chartW / labels.length - 10);
+    const gap = (chartW - barW * labels.length) / (labels.length + 1);
+    const colors = ['#9333ea','#2563eb','#16a34a','#ca8a04','#dc2626','#0ea5e9','#ec4899','#14b8a6'];
+
+    ctx.clearRect(0, 0, w, h);
+
+    // Grid lines
+    ctx.strokeStyle = "#334155";
+    ctx.lineWidth = 0.5;
+    for(let i=0; i<=5; i++) {
+        const y = padding.top + chartH - (i/5)*chartH;
+        ctx.beginPath();
+        ctx.moveTo(padding.left, y);
+        ctx.lineTo(w - padding.right, y);
+        ctx.stroke();
+        ctx.fillStyle = "#64748b";
+        ctx.font = "10px sans-serif";
+        ctx.textAlign = "right";
+        ctx.fillText(Math.round(maxVal * i / 5), padding.left - 6, y + 3);
+    }
+
+    // Bars
+    labels.forEach((label, i) => {
+        const x = padding.left + gap + i * (barW + gap);
+        const barH = (values[i] / maxVal) * chartH;
+        const y = padding.top + chartH - barH;
+        const color = colors[i % colors.length];
+
+        ctx.fillStyle = color;
+        ctx.fillRect(x, y, barW, barH);
+
+        ctx.fillStyle = "#e2e8f0";
+        ctx.font = "bold 11px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(values[i], x + barW/2, y - 6);
+
+        ctx.fillStyle = "#94a3b8";
+        ctx.font = "10px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(label.length > 10 ? label.substring(0,8)+'..' : label, x + barW/2, h - 10);
+    });
+}
+
+function renderChartBulan() {
+    const canvas = document.getElementById("chartBulan");
+    if(!canvas) return;
+    const ctx = canvas.getContext("2d");
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * 2;
+    canvas.height = 440;
+    ctx.scale(2, 2);
+
+    const w = rect.width;
+    const h = 220;
+    const padding = {top:20, right:20, bottom:40, left:50};
+    const chartW = w - padding.left - padding.right;
+    const chartH = h - padding.top - padding.bottom;
+
+    // Generate last 12 months labels
+    const months = [];
+    const monthNames = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
+    const now = new Date();
+    for(let i=11; i>=0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        months.push({
+            label: monthNames[d.getMonth()] + " " + d.getFullYear(),
+            key: (d.getMonth()+1) + "/" + d.getFullYear()
+        });
+    }
+
+    // PostgreSQL activity_logs: unique users per month
+    const logs = serverActivityLogs.filter(l => l.aksi === 'MASUK');
+    const monthData = {};
+    months.forEach(m => monthData[m.key] = new Set());
+
+    logs.forEach(l => {
+        const d = new Date(l.createdAt);
+        if(Number.isNaN(d.getTime())) return;
+        const key = (d.getMonth()+1) + "/" + d.getFullYear();
+        if(monthData[key]) monthData[key].add(l.nama);
+    });
+
+    const labels = months.map(m => m.label);
+    const values = months.map(m => monthData[m.key] ? monthData[m.key].size : 0);
+
+    const maxVal = Math.max(...values, 1);
+    const stepX = chartW / (labels.length - 1 || 1);
+
+    ctx.clearRect(0, 0, w, h);
+
+    // Grid lines
+    ctx.strokeStyle = "#334155";
+    ctx.lineWidth = 0.5;
+    for(let i=0; i<=5; i++) {
+        const y = padding.top + chartH - (i/5)*chartH;
+        ctx.beginPath();
+        ctx.moveTo(padding.left, y);
+        ctx.lineTo(w - padding.right, y);
+        ctx.stroke();
+        ctx.fillStyle = "#64748b";
+        ctx.font = "10px sans-serif";
+        ctx.textAlign = "right";
+        ctx.fillText(Math.round(maxVal * i / 5), padding.left - 6, y + 3);
+    }
+
+    // Line
+    ctx.strokeStyle = "#38bdf8";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    const points = [];
+    labels.forEach((label, i) => {
+        const x = padding.left + i * stepX;
+        const y = padding.top + chartH - (values[i] / maxVal) * chartH;
+        points.push({x, y, val: values[i]});
+        if(i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+
+    // Fill area under line
+    ctx.fillStyle = "rgba(56,189,248,0.15)";
+    ctx.beginPath();
+    ctx.moveTo(points[0].x, padding.top + chartH);
+    points.forEach(p => ctx.lineTo(p.x, p.y));
+    ctx.lineTo(points[points.length-1].x, padding.top + chartH);
+    ctx.closePath();
+    ctx.fill();
+
+    // Points
+    points.forEach((p, i) => {
+        ctx.fillStyle = "#0f172a";
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 5, 0, Math.PI*2);
+        ctx.fill();
+        ctx.strokeStyle = "#38bdf8";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Value
+        ctx.fillStyle = "#e2e8f0";
+        ctx.font = "bold 10px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(p.val, p.x, p.y - 10);
+
+        // Label
+        ctx.fillStyle = "#94a3b8";
+        ctx.font = "9px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(labels[i].split(' ')[0], p.x, h - 8);
+        ctx.fillStyle = "#64748b";
+        ctx.font = "8px sans-serif";
+        ctx.fillText(labels[i].split(' ')[1], p.x, h - 2);
+    });
+}
+
+// ========== AUDIT LOG — POSTGRESQL SYNC STAGE E2 ==========
+function normalizeServerAudit(a) {
+    const dt = a?.createdAt ? new Date(a.createdAt) : new Date();
+    return {
+        id: a?.id ?? null,
+        tgl: dt.toLocaleDateString('id-ID'),
+        jam: dt.toLocaleTimeString('id-ID'),
+        admin: a?.adminName || '-',
+        aksi: a?.action || '-',
+        target: a?.target || '',
+        detail: a?.detail || ''
+    };
+}
+
+// Kept for compatibility with existing Admin UI calls.
+// Server E1 already records authoritative admin actions in PostgreSQL.
+// Therefore this function no longer writes a second localStorage copy.
+function catatAudit(aksi, target, detail="") {
+    console.log("[AUDIT] Server-authoritative:", aksi, target, detail);
+}
+
+async function loadServerAuditLogs(limit = 500) {
+    const data = await apiRequest(`/api/audit-logs?limit=${limit}`, { method:'GET' }, true);
+    serverAuditLogs = Array.isArray(data?.logs) ? data.logs.map(normalizeServerAudit) : [];
+    return serverAuditLogs;
+}
+
+async function renderAudit() {
+    const tbody = document.getElementById("tabelAudit");
+    if(!tbody) return;
+    tbody.innerHTML = `<tr><td colspan="5">Memuat Audit Log dari PostgreSQL...</td></tr>`;
+
+    try {
+        await loadServerAuditLogs();
+    } catch(err) {
+        tbody.innerHTML = `<tr><td colspan="5" class="empty-state">❌ ${err.message}</td></tr>`;
+        return;
+    }
+
+    const audit = serverAuditLogs;
+    if(audit.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="empty-state"><div class="empty-state-icon">📋</div>Belum ada catatan audit di PostgreSQL</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = audit.map(a => {
+        let aksiBadge = '<span class="badge badge-abu">' + a.aksi + '</span>';
+        if(a.aksi.includes('HAPUS') || a.aksi.includes('BAN') || a.aksi.includes('KICK')) aksiBadge = '<span class="badge badge-merah">' + a.aksi + '</span>';
+        else if(a.aksi.includes('BUAT') || a.aksi.includes('AKTIF') || a.aksi.includes('UNBAN') || a.aksi.includes('UNMUTE') || a.aksi.includes('UNLOCK')) aksiBadge = '<span class="badge badge-hijau">' + a.aksi + '</span>';
+        else if(a.aksi.includes('MUTE') || a.aksi.includes('LOCK') || a.aksi.includes('NONAKTIF')) aksiBadge = '<span class="badge badge-kuning">' + a.aksi + '</span>';
+        return `<tr>
+            <td style="white-space:nowrap;font-size:13px;color:#94a3b8;">${a.tgl}<br>${a.jam}</td>
+            <td><b>${a.admin}</b></td>
+            <td>${aksiBadge}</td>
+            <td>${a.target}</td>
+            <td style="font-size:13px;color:#94a3b8;">${a.detail || '-'}</td>
+        </tr>`;
+    }).join('');
+}
+
+async function bersihkanAudit() {
+    if(!confirm("Yakin hapus semua catatan audit PostgreSQL?")) return;
+    try {
+        await apiRequest('/api/audit-logs', { method:'DELETE' }, true);
+        await renderAudit();
+        toast("Audit log PostgreSQL dibersihkan!", "kuning");
+    } catch(err) {
+        toast(`❌ ${err.message}`, "merah", 5000);
+    }
+}
+
+
+async function renderAdminPanel() {
+    await muatGroupsPostgreSQL(true);
+    updateStats();
+    if(adminTabAktif === 'users') renderUsers();
+    if(adminTabAktif === 'groups') renderGroups();
+    if(adminTabAktif === 'channels') renderChannels();
+    if(adminTabAktif === 'audit') await renderAudit();
+    if(adminTabAktif === 'monitoring') refreshMonitoring();
+}
+
+// ========== USERS MANAGEMENT (POSTGRESQL) ==========
+async function loadServerUsers() {
+    const data = await apiRequest('/api/users', { method:'GET' }, true);
+    serverUsers = data.users || [];
+    return serverUsers;
+}
+
+async function renderUsers() {
+    const tbody = document.getElementById("tabelUsers");
+    if(!tbody) return;
+    tbody.innerHTML = `<tr><td colspan="7">Memuat user dari PostgreSQL...</td></tr>`;
+    try { await loadServerUsers(); }
+    catch(err) { tbody.innerHTML = `<tr><td colspan="7" class="empty-state">❌ ${err.message}</td></tr>`; return; }
+    if(serverUsers.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="empty-state"><div class="empty-state-icon">👤</div>Belum ada pengguna</td></tr>`;
+        return;
+    }
+    tbody.innerHTML = serverUsers.map((u, i) => {
+        const statusBadge = u.status === "aktif" ? '<span class="badge badge-aktif">AKTIF</span>' : '<span class="badge badge-nonaktif">NONAKTIF</span>';
+        const bannedBadge = u.banned ? '<span class="badge badge-banned">BANNED</span>' : '<span class="badge badge-aktif">-</span>';
+        const mutedBadge = u.muted ? '<span class="badge badge-muted">MUTED</span>' : '<span class="badge badge-aktif">-</span>';
+        const isAdmin = u.role === 'admin' || u.nama === ADMIN_NAMA;
+        const disabled = isAdmin ? 'disabled' : '';
+        return `<tr>
+            <td><b>${u.nama}</b> ${isAdmin ? '<span class="admin-badge">ADMIN</span>' : ''}</td>
+            <td>${statusBadge}</td><td>${bannedBadge}</td><td>${mutedBadge}</td>
+            <td>${u.dibuatOleh || '-'}</td><td>${u.tanggalDibuat || '-'}</td>
+            <td><div class="aksi-btns">
+                <button class="btn btn-sm" onclick="bukaEditUser(${i})" ${disabled}>Edit</button>
+                <button class="btn btn-sm btn-kuning" onclick="bukaResetPass(${i})" ${disabled}>Reset Pass</button>
+                <button class="btn btn-sm ${u.status==='aktif'?'btn-merah':'btn-hijau'}" onclick="toggleUserStatus(${i})" ${disabled}>${u.status==='aktif'?'Nonaktifkan':'Aktifkan'}</button>
+                <button class="btn btn-sm ${u.banned?'btn-hijau':'btn-merah'}" onclick="toggleUserBan(${i})" ${disabled}>${u.banned?'Unban':'Ban'}</button>
+                <button class="btn btn-sm ${u.muted?'btn-hijau':'btn-kuning'}" onclick="toggleUserMute(${i})" ${disabled}>${u.muted?'Unmute':'Mute'}</button>
+                <button class="btn btn-sm btn-merah" onclick="kickUser('${u.nama.replace(/'/g,"\\'")}')" ${disabled}>Kick</button>
+                <button class="btn btn-sm btn-merah" onclick="hapusUser(${i})" ${disabled}>Hapus</button>
+            </div></td></tr>`;
+    }).join('');
+    updateStats();
+}
+
+async function simpanUserBaru() {
+    const nama=document.getElementById("modalNamaUser").value.trim(), sandi=document.getElementById("modalPassUser").value;
+    if(!nama || !sandi) return toast("Isi nama dan password!", "merah");
+    try {
+        await apiRequest('/api/users',{method:'POST',body:JSON.stringify({nama,sandi})},true);
+        catatAudit("BUAT USER",nama,"disimpan ke PostgreSQL");
+        tutupModal('modalBuatUser'); await renderUsers();
+        toast(`User "${nama}" berhasil dibuat di server!`,"hijau");
+    } catch(err){ toast(`❌ ${err.message}`,"merah"); }
+}
+function bukaEditUser(idx) {
+    const u=serverUsers[idx]; if(!u) return;
+    editUserTarget=idx;
+    document.getElementById("editUserNama").value=u.nama;
+    document.getElementById("editUserStatus").value=u.status;
+    document.getElementById("editUserBanned").value=u.banned?"true":"false";
+    document.getElementById("editUserMuted").value=u.muted?"true":"false";
+    bukaModal('modalEditUser');
+}
+async function simpanEditUser() {
+    const u=serverUsers[editUserTarget]; if(!u) return;
+    const patch={status:document.getElementById("editUserStatus").value,banned:document.getElementById("editUserBanned").value==="true",muted:document.getElementById("editUserMuted").value==="true"};
+    try { await apiRequest(`/api/users/${u.id}`,{method:'PATCH',body:JSON.stringify(patch)},true); catatAudit("EDIT USER",u.nama,JSON.stringify(patch)); tutupModal('modalEditUser'); await renderUsers(); toast("User berhasil diperbarui di server!","hijau"); }
+    catch(err){toast(`❌ ${err.message}`,"merah");}
+}
+function bukaResetPass(idx) { const u=serverUsers[idx]; if(!u)return; editUserTarget=idx; document.getElementById("resetPassNama").value=u.nama; document.getElementById("resetPassBaru").value=""; bukaModal('modalResetPass'); }
+async function simpanResetPass() {
+    const pass=document.getElementById("resetPassBaru").value, u=serverUsers[editUserTarget];
+    if(!u || pass.length<4) return toast("Password minimal 4 karakter!","merah");
+    try { await apiRequest(`/api/users/${u.id}/password`,{method:'PATCH',body:JSON.stringify({sandi:pass})},true); catatAudit("RESET PASSWORD",u.nama,"password di-reset di PostgreSQL"); tutupModal('modalResetPass'); toast("Password berhasil direset!","hijau"); }
+    catch(err){toast(`❌ ${err.message}`,"merah");}
+}
+async function patchUserFlag(idx, patch, auditAction) { const u=serverUsers[idx]; if(!u||u.role==='admin')return; try{await apiRequest(`/api/users/${u.id}`,{method:'PATCH',body:JSON.stringify({...u,...patch})},true);catatAudit(auditAction,u.nama,JSON.stringify(patch));await renderUsers();toast(`User "${u.nama}" diperbarui!`,"hijau");}catch(err){toast(`❌ ${err.message}`,"merah");} }
+function toggleUserStatus(idx){const u=serverUsers[idx];if(u)patchUserFlag(idx,{status:u.status==='aktif'?'nonaktif':'aktif'},u.status==='aktif'?'NONAKTIFKAN USER':'AKTIFKAN USER');}
+function toggleUserBan(idx){const u=serverUsers[idx];if(u)patchUserFlag(idx,{banned:!u.banned},u.banned?'UNBAN USER':'BAN USER');}
+function toggleUserMute(idx){const u=serverUsers[idx];if(u)patchUserFlag(idx,{muted:!u.muted},u.muted?'UNMUTE USER':'MUTE USER');}
+function kickUser(nama) { if(nama===ADMIN_NAMA)return; if(socket?.connected) socket.emit('admin:kick',{nama}); catatAudit("KICK USER",nama,"kick dikirim via Socket.IO"); toast(`Perintah kick untuk "${nama}" dikirim!`,"kuning"); }
+async function hapusUser(idx) { const u=serverUsers[idx];if(!u||u.role==='admin')return;if(!confirm(`Yakin hapus user "${u.nama}"?`))return;try{await apiRequest(`/api/users/${u.id}`,{method:'DELETE'},true);catatAudit("HAPUS USER",u.nama,"dihapus dari PostgreSQL");await renderUsers();toast(`User "${u.nama}" dihapus!`,"merah");}catch(err){toast(`❌ ${err.message}`,"merah");} }
+
+// ========== GROUPS MANAGEMENT ==========
+function renderGroups() {
+    const tbody = document.getElementById("tabelGroups");
+    const grup = ambilData("daftarGrup");
+    if(grup.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="empty-state"><div class="empty-state-icon">📁</div>Belum ada grup</td></tr>`;
+        return;
+    }
+    tbody.innerHTML = grup.map((g, i) => {
+        const statusBadge = g.status === "aktif" ? '<span class="badge badge-aktif">AKTIF</span>' : '<span class="badge badge-nonaktif">NONAKTIF</span>';
+        const prefixHint = g.prefix ? `<span style="color:#64748b;font-size:11px;">(prefix: ${g.prefix})</span>` : '';
+        return `<tr>
+            <td><b>${g.nama}</b> ${prefixHint}</td>
+            <td>${statusBadge}</td>
+            <td>${g.channel.length} channel</td>
+            <td>
+                <div class="aksi-btns">
+                    <button class="btn btn-sm" onclick="bukaEditGroup(${i})">Edit</button>
+                    <button class="btn btn-sm ${g.status==='aktif'?'btn-merah':'btn-hijau'}" onclick="toggleGroupStatus(${i})">${g.status==='aktif'?'Nonaktifkan':'Aktifkan'}</button>
+                    <button class="btn btn-sm btn-merah" onclick="hapusGroup(${i})">Hapus</button>
+                </div>
+            </td>
+        </tr>`;
+    }).join('');
+    updateStats();
+}
+
+function simpanGroupBaru() {
+    const nama = document.getElementById("modalNamaGroup").value.trim();
+    const prefix = document.getElementById("modalPrefixGroup").value.trim();
+    if(!nama) return toast("Isi nama group!", "merah");
+    const grup = ambilData("daftarGrup");
+    if(grup.some(g => g.nama.toLowerCase() === nama.toLowerCase())) return toast("Nama group sudah ada!", "merah");
+    grup.push({
+        nama,
+        prefix,
+        status: "aktif",
+        channel: [
+            {nama:"CH 01", status:"aktif", locked:false, muted:false, prefix:""}
+        ]
+    });
+    simpanData("daftarGrup", grup);
+    tutupModal('modalBuatGroup');
+    renderGroups();
+    toast(`Group "${nama}" berhasil dibuat!`, "hijau");
+}
+function bukaEditGroup(idx) {
+    const grup = ambilData("daftarGrup");
+    editGroupTarget = idx;
+    document.getElementById("editGroupNama").value = grup[idx].nama;
+    document.getElementById("editGroupPrefix").value = grup[idx].prefix || "";
+    document.getElementById("editGroupStatus").value = grup[idx].status;
+    bukaModal('modalEditGroup');
+}
+function simpanEditGroup() {
+    const grup = ambilData("daftarGrup");
+    const namaBaru = document.getElementById("editGroupNama").value.trim();
+    const prefixBaru = document.getElementById("editGroupPrefix").value.trim();
+    if(!namaBaru) return toast("Nama tidak boleh kosong!", "merah");
+    grup[editGroupTarget].nama = namaBaru;
+    grup[editGroupTarget].prefix = prefixBaru;
+    grup[editGroupTarget].status = document.getElementById("editGroupStatus").value;
+    simpanData("daftarGrup", grup);
+    catatAudit("EDIT GROUP", grup[editGroupTarget].nama, `prefix=${grup[editGroupTarget].prefix||'-'}, status=${grup[editGroupTarget].status}`);
+    tutupModal('modalEditGroup');
+    renderGroups();
+    toast("Group berhasil diperbarui!", "hijau");
+}
+function toggleGroupStatus(idx) {
+    const grup = ambilData("daftarGrup");
+    grup[idx].status = grup[idx].status === "aktif" ? "nonaktif" : "aktif";
+    simpanData("daftarGrup", grup);
+    catatAudit(grup[idx].status === 'aktif' ? 'AKTIFKAN GROUP' : 'NONAKTIFKAN GROUP', grup[idx].nama, `status=${grup[idx].status}`);
+    renderGroups();
+    toast(`Group "${grup[idx].nama}" ${grup[idx].status === 'aktif' ? 'diaktifkan' : 'dinonaktifkan'}!`, grup[idx].status === 'aktif' ? 'hijau' : 'kuning');
+}
+function hapusGroup(idx) {
+    if(!confirm(`Yakin hapus group "${ambilData('daftarGrup')[idx].nama}"? Semua channel di dalamnya akan ikut terhapus.`)) return;
+    const grup = ambilData("daftarGrup");
+    const nama = grup[idx].nama;
+    grup.splice(idx, 1);
+    simpanData("daftarGrup", grup);
+    catatAudit("HAPUS GROUP", nama, `group dihapus oleh admin`);
+    renderGroups();
+    toast(`Group "${nama}" dihapus!`, "merah");
+}
+
+// ========== CHANNELS MANAGEMENT ==========
+function renderChannels() {
+    const tbody = document.getElementById("tabelChannels");
+    const grup = ambilData("daftarGrup");
+    let rows = [];
+    grup.forEach((g, gi) => {
+        g.channel.forEach((c, ci) => {
+            const statusBadge = c.status === "aktif" ? '<span class="badge badge-aktif">AKTIF</span>' : '<span class="badge badge-nonaktif">NONAKTIF</span>';
+            const lockedBadge = c.locked ? '<span class="badge badge-locked">🔒 LOCKED</span>' : '<span class="badge badge-aktif">-</span>';
+            const mutedBadge = c.muted ? '<span class="badge badge-muted">🔇 MUTED</span>' : '<span class="badge badge-aktif">-</span>';
+
+            // Prefix hint untuk admin (kecil, abu-abu)
+            let prefixHint = '';
+            if(c.prefix) {
+                prefixHint = `<span style="color:#64748b;font-size:11px;">(prefix: ${c.prefix})</span>`;
+            } else if(g.prefix) {
+                prefixHint = `<span style="color:#64748b;font-size:11px;">(inherit: ${g.prefix})</span>`;
+            }
+
+            const maxUsersBadge = c.maxUsers && c.maxUsers > 0 ? `<span class="badge badge-maxuser">${c.maxUsers}</span>` : '<span style="color:#64748b;font-size:12px;">∞</span>';
+            const timeoutBadge = c.pttTimeout && c.pttTimeout > 0 ? `<span class="badge badge-kuning">${c.pttTimeout}s</span>` : '<span style="color:#64748b;font-size:12px;">∞</span>';
+            rows.push(`<tr>
+                <td><b>${g.nama}</b></td>
+                <td>${c.nama} ${prefixHint}</td>
+                <td>${maxUsersBadge}</td>
+                <td>${timeoutBadge}</td>
+                <td>${statusBadge}</td>
+                <td>${lockedBadge}</td>
+                <td>${mutedBadge}</td>
+                <td>
+                    <div class="aksi-btns">
+                        <button class="btn btn-sm" onclick="bukaEditChannel(${gi},${ci})">Edit</button>
+                        <button class="btn btn-sm ${c.muted?'btn-hijau':'btn-kuning'}" onclick="toggleChannelMute(${gi},${ci})">${c.muted?'Unmute':'Mute'}</button>
+                        <button class="btn btn-sm ${c.locked?'btn-hijau':'btn-ungu'}" onclick="toggleChannelLock(${gi},${ci})">${c.locked?'Unlock':'Lock'}</button>
+                        <button class="btn btn-sm btn-merah" onclick="hapusChannelAdmin(${gi},${ci})">Hapus</button>
+                    </div>
+                </td>
+            </tr>`);
+        });
+    });
+    tbody.innerHTML = rows.length ? rows.join('') : `<tr><td colspan="8" class="empty-state"><div class="empty-state-icon">🔊</div>Belum ada channel</td></tr>`;
+    updateStats();
+}
+
+function isiPilihanGroup() {
+    const sel = document.getElementById("modalPilihGroup");
+    const grup = ambilData("daftarGrup");
+    sel.innerHTML = grup.map((g, i) => `<option value="${i}">${g.nama}</option>`).join('');
+}
+function simpanChannelBaru() {
+    const gi = parseInt(document.getElementById("modalPilihGroup").value);
+    const nama = document.getElementById("modalNamaChannel").value.trim();
+    const prefix = document.getElementById("modalPrefixChannel").value.trim();
+    const maxUsers = parseInt(document.getElementById("modalMaxUsersChannel").value) || 0;
+    const pttTimeout = parseInt(document.getElementById("modalPttTimeout").value) || 0;
+    if(isNaN(gi) || !nama) return toast("Pilih grup dan isi nama channel!", "merah");
+    const grup = ambilData("daftarGrup");
+    if(grup[gi].channel.some(c => c.nama.toLowerCase() === nama.toLowerCase())) return toast("Channel sudah ada di grup ini!", "merah");
+    grup[gi].channel.push({ nama, prefix, maxUsers, pttTimeout, status: "aktif", locked: false, muted: false });
+    simpanData("daftarGrup", grup);
+    catatAudit("BUAT CHANNEL", `${grup[gi].nama} / ${nama}`, `prefix=${prefix||'-'}, maxUsers=${maxUsers||'∞'}, timeout=${pttTimeout||'∞'}`);
+    tutupModal('modalBuatChannel');
+    renderChannels();
+    toast(`Channel "${nama}" berhasil dibuat!`, "hijau");
+}
+function bukaEditChannel(gi, ci) {
+    const grup = ambilData("daftarGrup");
+    editChannelTarget = { grupIdx: gi, chIdx: ci };
+    const c = grup[gi].channel[ci];
+    document.getElementById("renameChannelLama").value = c.nama;
+    document.getElementById("renameChannelBaru").value = c.nama;
+    document.getElementById("renameChannelPrefix").value = c.prefix || "";
+    document.getElementById("renameChannelMaxUsers").value = c.maxUsers || 0;
+    document.getElementById("renameChannelPttTimeout").value = c.pttTimeout || 0;
+    bukaModal('modalRenameChannel');
+}
+function simpanEditChannel() {
+    const baru = document.getElementById("renameChannelBaru").value.trim();
+    const prefixBaru = document.getElementById("renameChannelPrefix").value.trim();
+    const maxUsersBaru = parseInt(document.getElementById("renameChannelMaxUsers").value) || 0;
+    const pttTimeoutBaru = parseInt(document.getElementById("renameChannelPttTimeout").value) || 0;
+    if(!baru) return toast("Isi nama!", "merah");
+    const grup = ambilData("daftarGrup");
+    const { grupIdx, chIdx } = editChannelTarget;
+    const lama = grup[grupIdx].channel[chIdx].nama;
+    grup[grupIdx].channel[chIdx].nama = baru;
+    grup[grupIdx].channel[chIdx].prefix = prefixBaru;
+    grup[grupIdx].channel[chIdx].maxUsers = maxUsersBaru;
+    grup[grupIdx].channel[chIdx].pttTimeout = pttTimeoutBaru;
+    simpanData("daftarGrup", grup);
+    catatAudit("EDIT CHANNEL", `${grup[grupIdx].nama} / ${lama}`, `nama=${baru}, prefix=${prefixBaru||'-'}, maxUsers=${maxUsersBaru||'∞'}, timeout=${pttTimeoutBaru||'∞'}`);
+    tutupModal('modalRenameChannel');
+    renderChannels();
+    toast("Channel berhasil diperbarui!", "hijau");
+}
+function toggleChannelMute(gi, ci) {
+    const grup = ambilData("daftarGrup");
+    grup[gi].channel[ci].muted = !grup[gi].channel[ci].muted;
+    simpanData("daftarGrup", grup);
+    catatAudit(grup[gi].channel[ci].muted ? 'MUTE CHANNEL' : 'UNMUTE CHANNEL', `${grup[gi].nama} / ${grup[gi].channel[ci].nama}`, `muted=${grup[gi].channel[ci].muted}`);
+    renderChannels();
+    toast(`Channel "${grup[gi].channel[ci].nama}" ${grup[gi].channel[ci].muted ? 'dimute' : 'unmute'}!`, "kuning");
+}
+function toggleChannelLock(gi, ci) {
+    const grup = ambilData("daftarGrup");
+    grup[gi].channel[ci].locked = !grup[gi].channel[ci].locked;
+    simpanData("daftarGrup", grup);
+    catatAudit(grup[gi].channel[ci].locked ? 'LOCK CHANNEL' : 'UNLOCK CHANNEL', `${grup[gi].nama} / ${grup[gi].channel[ci].nama}`, `locked=${grup[gi].channel[ci].locked}`);
+    renderChannels();
+    toast(`Channel "${grup[gi].channel[ci].nama}" ${grup[gi].channel[ci].locked ? 'dikunci' : 'dibuka'}!`, "ungu");
+}
+function hapusChannelAdmin(gi, ci) {
+    const grup = ambilData("daftarGrup");
+    if(!confirm(`Yakin hapus channel "${grup[gi].channel[ci].nama}"?`)) return;
+    const nama = grup[gi].channel[ci].nama;
+    grup[gi].channel.splice(ci, 1);
+    simpanData("daftarGrup", grup);
+    catatAudit("HAPUS CHANNEL", `${grup[gi].nama} / ${nama}`, `channel dihapus oleh admin`);
+    renderChannels();
+    toast(`Channel "${nama}" dihapus!`, "merah");
+}
+
+// ========== MONITORING ==========
+function refreshMonitoring() {
+    const container = document.getElementById("monitoringTree");
+    const grup = ambilData("daftarGrup");
+    const sessions = normalizeServerSessions(serverSessions);
+    const now = Date.now();
+    const kicked = ambilData("kickedUsers");
+
+    // Bersihkan kicked yang sudah expired (> 5 menit)
+    const validKicked = kicked.filter(k => now - k.kickedAt < 300000);
+    if(validKicked.length !== kicked.length) simpanData("kickedUsers", validKicked);
+
+    let html = '<ul class="tree">';
+
+    if(grup.length === 0) {
+        html += '<li class="empty-state"><div class="empty-state-icon">📡</div>Tidak ada grup</li>';
+    } else {
+        grup.forEach(g => {
+            const gStatus = g.status === "aktif" ? "🟢" : "🔴";
+            html += `<li class="tree-item">
+                <div class="tree-group">${gStatus} 📁 ${g.nama} <span style="color:#64748b;font-size:12px;">(${g.status})</span></div>
+                <ul class="tree-channels">`;
+
+            if(g.channel.length === 0) {
+                html += '<li class="tree-channel" style="color:#64748b;">(tidak ada channel)</li>';
+            } else {
+                g.channel.forEach(c => {
+                    const cStatus = c.status === "aktif" ? "🔊" : "🔇";
+                    const cLocked = c.locked ? "🔒" : "";
+                    const cMuted = c.muted ? "🔇" : "";
+                    html += `<li class="tree-channel">${cStatus} ${cLocked} ${cMuted} ${c.nama} <span style="color:#64748b;font-size:12px;">(${c.status})</span>`;
+
+                    // Cari users di channel ini
+                    const usersInChannel = Object.entries(sessions).filter(([nama, s]) => {
+                        return s.channel === c.nama && s.group === g.nama && (now - s.timestamp < 60000);
+                    });
+
+                    if(usersInChannel.length > 0) {
+                        html += `<ul class="tree-users">`;
+                        usersInChannel.forEach(([nama, s]) => {
+                            let statusIcon = '';
+                            if(s.floorStatus === 'talking') statusIcon = '<span class="talking-indicator">🎙️</span>';
+                            else if(s.floorStatus === 'waiting') statusIcon = '<span style="color:#f59e0b;">⏳</span>';
+                            const self = nama === namaSaya ? '(Anda)' : '';
+                            const adminBadge = nama === ADMIN_NAMA ? '<span style="color:#a855f7;font-size:10px;">👑</span>' : '';
+                            html += `<li class="tree-user">👤 ${nama} ${adminBadge} ${self} ${statusIcon}</li>`;
+                        });
+                        html += `</ul>`;
+                    }
+                    html += `</li>`;
+                });
+            }
+            html += `</ul></li>`;
+        });
+    }
+    html += '</ul>';
+    container.innerHTML = html;
+    updateStats();
+}
+
+function startMonitoringAutoRefresh() {
+    if(monitoringInterval) clearInterval(monitoringInterval);
+    monitoringInterval = setInterval(refreshMonitoring, 5000);
+}
+function stopMonitoringAutoRefresh() {
+    if(monitoringInterval) { clearInterval(monitoringInterval); monitoringInterval = null; }
+}
+function bersihkanSession() {
+    simpanData("onlineSessions", {});
+    simpanData("kickedUsers", []);
+    catatAudit("BERSIHKAN SESSION", "Semua Session", `session online dan kicked users dibersihkan`);
+    refreshMonitoring();
+    toast("Semua session online dibersihkan!", "kuning");
+}
+
+// ========== HEARTBEAT SYSTEM ==========
+function startHeartbeat() {
+    if(heartbeatInterval) clearInterval(heartbeatInterval);
+    updateHeartbeat();
+    heartbeatInterval = setInterval(updateHeartbeat, 10000);
+}
+function stopHeartbeat() {
+    if(heartbeatInterval) { clearInterval(heartbeatInterval); heartbeatInterval = null; }
+    if(socket && realtimeConnected) socket.emit("presence:update", { micStatus:false, floorStatus:"idle" });
+    const sessions = ambilData("onlineSessions");
+    delete sessions[namaSaya];
+    simpanData("onlineSessions", sessions);
+}
+
+function initAdminRealtimeSocket() {
+    // Admin monitoring socket: connect only. Do NOT join room, create PeerJS, request mic, or load TURN.
+    if(socket) {
+        try { socket.removeAllListeners(); } catch(e) {}
+        try { socket.disconnect(); } catch(e) {}
+    }
+
+    if(!REALTIME_SERVER_URL || REALTIME_SERVER_URL.includes("YOUR-BACKEND")) {
+        console.warn("[ADMIN SOCKET] Backend URL belum dikonfigurasi.");
+        return false;
+    }
+
+    socket = io(REALTIME_SERVER_URL, {
+        transports:["websocket","polling"],
+        reconnection:true,
+        reconnectionAttempts:Infinity,
+        reconnectionDelay:800,
+        reconnectionDelayMax:5000,
+        timeout:8000
+    });
+
+    socket.on("connect", async () => {
+        realtimeConnected = true;
+        console.log("[ADMIN SOCKET] CONNECTED:", socket.id);
+        try {
+            await loadServerAdminStats();
+            updateStats();
+            refreshMonitoring();
+            if(adminTabAktif === 'statistik') {
+                renderChartChannel();
+                renderChartGroup();
+                renderChartBulan();
+            }
+        } catch(err) {
+            console.warn("[ADMIN SOCKET] Initial sync gagal:", err);
+        }
+    });
+
+    socket.on("disconnect", reason => {
+        realtimeConnected = false;
+        console.warn("[ADMIN SOCKET] DISCONNECTED:", reason);
+    });
+
+    socket.on("connect_error", err => {
+        realtimeConnected = false;
+        console.warn("[ADMIN SOCKET] CONNECT ERROR:", err?.message || err);
+    });
+
+    socket.on("presence:update", sessions => {
+        serverSessions = normalizeServerSessions(sessions);
+        if(!serverAdminStats) serverAdminStats = {summary:{}};
+        if(!serverAdminStats.summary) serverAdminStats.summary = {};
+        serverAdminStats.summary.onlineUsers = Object.keys(serverSessions).length;
+        serverAdminStats.sessions = Object.values(serverSessions);
+
+        updateStats();
+        refreshMonitoring();
+        scheduleAdminRealtimeSync("admin:presence:update");
+        console.log("[ADMIN SOCKET] PRESENCE:", Object.keys(serverSessions).length);
+    });
+
+    socket.on("audit:new", log => {
+        try {
+            const item = normalizeServerAudit(log);
+            serverAuditLogs = [item, ...serverAuditLogs.filter(x => String(x.id) !== String(item.id))].slice(0,500);
+            if(adminTabAktif === 'audit') renderAudit();
+            scheduleAdminRealtimeSync("admin:audit:new");
+        } catch(err) {
+            console.warn("[ADMIN SOCKET] Audit parse gagal:", err);
+        }
+    });
+
+    socket.on("config:groups:update", async data => {
+        if(Array.isArray(data?.groups)) {
+            centralGroups = data.groups;
+            centralGroupsReady = true;
+            localStorage.setItem("daftarGrup", JSON.stringify(centralGroups));
+            try { if(adminTabAktif === 'groups') renderGroups(); } catch(_) {}
+            try { if(adminTabAktif === 'channels') renderChannels(); } catch(_) {}
+        }
+        scheduleAdminRealtimeSync("admin:config:update");
+    });
+
+    return true;
+}
+
+function initRealtimeSocket() {
+    if(socket) { try { socket.disconnect(); } catch(e) {} }
+    if(!REALTIME_SERVER_URL || REALTIME_SERVER_URL.includes("YOUR-BACKEND")) {
+        document.getElementById("statusKoneksi").className = "status status-merah";
+        document.getElementById("statusKoneksi").innerHTML = "❌ <b>Backend belum dikonfigurasi.</b> Isi REALTIME_SERVER_URL.";
+        toast("⚠️ URL backend realtime belum diatur.", "merah", 7000);
+        return false;
+    }
+    socket = io(REALTIME_SERVER_URL, { transports:["websocket","polling"], reconnection:true, timeout:8000 });
+    socket.on("connect", () => { realtimeConnected = true; if(peerIdSaya) joinRealtimeRoom(); });
+    socket.on("disconnect", () => { realtimeConnected = false; });
+    socket.on("server:ready", data => console.log("Realtime server ready", data));
+    socket.on("room:joined", data => {
+        serverSessions = Object.fromEntries((data.users || []).map(u => [u.nama, u]));
+        daftarNamaTerhubung = (data.users || []).map(u => u.nama);
+        if(!daftarNamaTerhubung.includes(namaSaya)) daftarNamaTerhubung.unshift(namaSaya);
+        perbaruiDaftarPengguna();
+        sinkronkanPeerUsers(data.users || []);
+    });
+    socket.on("room:users", users => {
+        serverSessions = Object.fromEntries((users || []).map(u => [u.nama, u]));
+        daftarNamaTerhubung = (users || []).map(u => u.nama);
+        if(!daftarNamaTerhubung.includes(namaSaya)) daftarNamaTerhubung.unshift(namaSaya);
+        perbaruiDaftarPengguna();
+        sinkronkanPeerUsers(users || []);
+    });
+    socket.on('config:groups:update', data => {
+        if(!Array.isArray(data?.groups)) return;
+        centralGroups = data.groups;
+        centralGroupsReady = true;
+        localStorage.setItem('daftarGrup', JSON.stringify(centralGroups));
+        console.log('[DBSYNC] Group/Channel live-sync diterima');
+        try { if(adminTabAktif === 'groups') renderGroups(); } catch(_) {}
+        try { if(adminTabAktif === 'channels') renderChannels(); } catch(_) {}
+        try { muatDaftarGrup(); } catch(_) {}
+    });
+    socket.on("audit:new", log => {
+        try {
+            const item = normalizeServerAudit(log);
+            serverAuditLogs = [item, ...serverAuditLogs.filter(x => String(x.id) !== String(item.id))].slice(0,500);
+            if(adminTabAktif === 'audit') renderAudit();
+            scheduleAdminRealtimeSync("audit:new");
+            console.log("[AUDIT] Realtime PostgreSQL log diterima:", item.aksi);
+        } catch(err) {
+            console.warn("[AUDIT] Realtime parse gagal:", err);
+        }
+    });
+    socket.on("presence:update", sessions => {
+        serverSessions = normalizeServerSessions(sessions);
+
+        // G3.1: presence Socket.IO adalah sumber ONLINE realtime.
+        // Jangan biarkan summary hasil fetch sebelumnya menahan angka Online lama.
+        if(!serverAdminStats) serverAdminStats = { summary:{} };
+        if(!serverAdminStats.summary) serverAdminStats.summary = {};
+        serverAdminStats.summary.onlineUsers = Object.keys(serverSessions).length;
+        serverAdminStats.sessions = Object.values(serverSessions);
+
+        updateStats();
+
+        // Refresh tree langsung; aman walaupun tab Monitoring sedang tersembunyi.
+        refreshMonitoring();
+
+        // Activity/statistik PostgreSQL menyusul sesudah event realtime.
+        scheduleAdminRealtimeSync("presence:update");
+        console.log("[G3.1] presence realtime:", Object.keys(serverSessions).length);
+    });
+    socket.on("room:error", e => toast("❌ " + (e?.message || "Gagal masuk room"), "merah", 6000));
+    socket.on("admin:kick", () => { toast("Anda telah di-kick oleh admin!", "merah", 5000); keluarChannel(); });
+    socket.on("floor:event", receiveFloorState);
+    return true;
+}
+function joinRealtimeRoom() {
+    if(!socket || !realtimeConnected || !peerIdSaya) return;
+    const grup = ambilData("daftarGrup").find(g => g.nama === grupAktif);
+    const ch = grup?.channel?.find(c => c.nama === channelAktif);
+    socket.emit("room:join", { nama:namaSaya, group:grupAktif, channel:channelAktif, peerId:peerIdSaya, maxUsers:ch?.maxUsers || 0 });
+}
+function syncPresenceToServer() {
+    if(socket && realtimeConnected) socket.emit("presence:update", { micStatus:micAktif, floorStatus:myFloorStatus });
+}
+function sinkronkanPeerUsers(users) {
+    if(!peer || peer.destroyed || !peer.open || !streamSaya) return;
+
+    const activePeerIds = new Set(
+        (users || [])
+            .map(u => u?.peerId)
+            .filter(id => id && id !== peerIdSaya)
+    );
+
+    // Bersihkan koneksi stale: peer sudah tidak ada di room.
+    Object.keys(koneksi).forEach(peerId => {
+        if(!activePeerIds.has(peerId)) {
+            try { koneksi[peerId]?.close(); } catch(e) {}
+            delete koneksi[peerId];
+            peerConnecting.delete(peerId);
+            if(peerConnectTimers.has(peerId)) {
+                clearTimeout(peerConnectTimers.get(peerId));
+                peerConnectTimers.delete(peerId);
+            }
+        }
+    });
+
+    (users || []).forEach(u => {
+        const targetPeerId = u?.peerId;
+        if(!targetPeerId || targetPeerId === peerIdSaya) return;
+
+        // Koneksi yang benar-benar OPEN dipertahankan.
+        if(koneksi[targetPeerId]?.open) return;
+
+        // Jika object lama ada tetapi tidak pernah OPEN, buang agar dapat retry.
+        if(koneksi[targetPeerId] && !koneksi[targetPeerId].open && !peerConnecting.has(targetPeerId)) {
+            try { koneksi[targetPeerId].close(); } catch(e) {}
+            delete koneksi[targetPeerId];
+        }
+
+        // Jangan membuat beberapa koneksi paralel ke peer yang sama.
+        if(peerConnecting.has(targetPeerId)) return;
+        peerConnecting.add(targetPeerId);
+
+        try {
+            console.log('[PEER] Connecting to', u.nama, targetPeerId);
+            const conn = peer.connect(targetPeerId, {
+                reliable: true,
+                metadata: { nama: namaSaya }
+            });
+
+            if(!conn) {
+                peerConnecting.delete(targetPeerId);
+                return;
+            }
+
+            koneksi[targetPeerId] = conn;
+
+            const clearConnectState = () => {
+                peerConnecting.delete(targetPeerId);
+                if(peerConnectTimers.has(targetPeerId)) {
+                    clearTimeout(peerConnectTimers.get(targetPeerId));
+                    peerConnectTimers.delete(targetPeerId);
+                }
+            };
+
+            const timer = setTimeout(() => {
+                if(!conn.open) {
+                    console.warn('[PEER] Connect timeout:', u.nama, targetPeerId);
+                    try { conn.close(); } catch(e) {}
+                    if(koneksi[targetPeerId] === conn) delete koneksi[targetPeerId];
+                    clearConnectState();
+                }
+            }, PEER_CONNECT_TIMEOUT_MS);
+            peerConnectTimers.set(targetPeerId, timer);
+
+            conn.on('open', () => {
+                clearConnectState();
+                koneksi[targetPeerId] = conn;
+                aturKoneksi(conn);
+                try { conn.send({ jenis:'laporNama', nama:namaSaya }); } catch(e) {}
+                perbaruiStatusTerhubung();
+                console.log('[PEER] Data OPEN:', u.nama, targetPeerId);
+
+                // Mulai media call setelah data channel benar-benar terbuka.
+                // Ini menghindari call berulang setiap room:users saat data peer belum siap.
+                try {
+                    const call = peer.call(targetPeerId, streamSaya, { metadata:{nama:namaSaya} });
+                    if(call) { debugTrackMediaCall(call, 'OUT'); pasangSuara(call); }
+                } catch(e) {
+                    console.warn('[PEER] Media call failed:', u.nama, targetPeerId, e);
+                }
+            });
+
+            conn.on('error', err => {
+                console.warn('[PEER] Data error:', u.nama, targetPeerId, err);
+                clearConnectState();
+                if(koneksi[targetPeerId] === conn) delete koneksi[targetPeerId];
+            });
+
+            conn.on('close', () => {
+                console.log('[PEER] Data closed:', u.nama, targetPeerId);
+                clearConnectState();
+                if(koneksi[targetPeerId] === conn) delete koneksi[targetPeerId];
+            });
+
+        } catch(e) {
+            peerConnecting.delete(targetPeerId);
+            if(peerConnectTimers.has(targetPeerId)) {
+                clearTimeout(peerConnectTimers.get(targetPeerId));
+                peerConnectTimers.delete(targetPeerId);
+            }
+            delete koneksi[targetPeerId];
+            console.warn('[PEER] Connect failed:', u.nama, targetPeerId, e);
+        }
+    });
+}
+
+// ========== NETWORK SPEED ==========
+let netSpeedInterval = null;
+let lastNetSpeed = 0;
+
+function startNetworkSpeedMonitor() {
+    stopNetworkSpeedMonitor();
+    updateNetworkSpeed();
+    netSpeedInterval = setInterval(updateNetworkSpeed, 3000);
+}
+function stopNetworkSpeedMonitor() {
+    if(netSpeedInterval) { clearInterval(netSpeedInterval); netSpeedInterval = null; }
+    const el = document.getElementById("networkSpeed");
+    if(el) el.textContent = "📡 Network: -- kb/s";
+}
+
+// ========== CHANNEL RECORDING ==========
+function toggleRecording() {
+    if(isRecording) stopRecording();
+    else startRecording();
+}
+
+function startRecording() {
+    if(!streamSaya) {
+        toast("Tidak ada audio stream! Pastikan mic aktif.", "merah");
+        return;
+    }
+
+    try {
+        // Create AudioContext for mixing if not exists
+        if(!audioContext) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if(audioContext.state === 'suspended') {
+            audioContext.resume();
+        }
+
+        // Create destination node for mixing
+        destinationNode = audioContext.createMediaStreamDestination();
+
+        // Connect outgoing stream (mic) to destination
+        const sourceOut = audioContext.createMediaStreamSource(streamSaya);
+        sourceOut.connect(destinationNode);
+
+        // Connect all incoming audio elements to destination
+        document.querySelectorAll('audio').forEach(audioEl => {
+            if(audioEl.srcObject) {
+                try {
+                    const sourceIn = audioContext.createMediaStreamSource(audioEl.srcObject);
+                    sourceIn.connect(destinationNode);
+                } catch(e) {}
+            }
+        });
+
+        mixedStream = destinationNode.stream;
+
+        // Determine best mime type
+        const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') 
+            ? 'audio/webm;codecs=opus' 
+            : (MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : '');
+
+        mediaRecorder = new MediaRecorder(mixedStream, mimeType ? { mimeType } : {});
+        recordedChunks = [];
+
+        mediaRecorder.ondataavailable = e => {
+            if(e.data && e.data.size > 0) recordedChunks.push(e.data);
+        };
+
+        mediaRecorder.onstop = () => {
+            saveRecording();
+        };
+
+        mediaRecorder.onerror = e => {
+            toast("Recording error: " + e.message, "merah");
+            stopRecordingUI();
+        };
+
+        mediaRecorder.start(1000); // collect every 1 second
+        isRecording = true;
+        recordingStartTime = Date.now();
+
+        // UI update
+        const panel = document.getElementById("recordingPanel");
+        const btn = document.getElementById("recBtn");
+        const badge = document.getElementById("recBadge");
+        const timer = document.getElementById("recTimer");
+        if(panel) panel.classList.add("recording-active");
+        if(btn) { btn.classList.remove("rec-btn-start"); btn.classList.add("rec-btn-stop"); btn.textContent = "⏹️ Stop Rekam"; }
+        if(badge) badge.style.display = "inline";
+        if(timer) timer.style.display = "block";
+
+        // Timer
+        recordingTimerInterval = setInterval(() => {
+            const elapsed = Math.floor((Date.now() - recordingStartTime) / 1000);
+            const m = String(Math.floor(elapsed / 60)).padStart(2, '0');
+            const s = String(elapsed % 60).padStart(2, '0');
+            const el = document.getElementById("recTimer");
+            if(el) el.textContent = `${m}:${s}`;
+        }, 1000);
+
+        toast("🔴 Recording dimulai!", "merah");
+
+    } catch(e) {
+        toast("Gagal memulai recording: " + e.message, "merah");
+        console.error(e);
+    }
+}
+
+function stopRecording() {
+    if(mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+    }
+    stopRecordingUI();
+}
+
+function stopRecordingUI() {
+    isRecording = false;
+    if(recordingTimerInterval) { clearInterval(recordingTimerInterval); recordingTimerInterval = null; }
+
+    const panel = document.getElementById("recordingPanel");
+    const btn = document.getElementById("recBtn");
+    const badge = document.getElementById("recBadge");
+    const timer = document.getElementById("recTimer");
+    if(panel) panel.classList.remove("recording-active");
+    if(btn) { btn.classList.remove("rec-btn-stop"); btn.classList.add("rec-btn-start"); btn.textContent = "🔴 Mulai Rekam"; }
+    if(badge) badge.style.display = "none";
+    if(timer) { timer.style.display = "none"; timer.textContent = "00:00"; }
+
+    // Cleanup mixed stream tracks
+    if(mixedStream) {
+        mixedStream.getTracks().forEach(t => t.stop());
+        mixedStream = null;
+    }
+    if(destinationNode) {
+        destinationNode = null;
+    }
+}
+
+function saveRecording() {
+    if(recordedChunks.length === 0) {
+        toast("Tidak ada data terekam.", "kuning");
+        return;
+    }
+
+    const blob = new Blob(recordedChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
+    const duration = Math.floor((Date.now() - recordingStartTime) / 1000);
+    const id = Date.now().toString();
+    const filename = `Recording_${channelAktif.replace(/\s/g,'_')}_${new Date().toLocaleDateString('id-ID').replace(/\//g,'-')}_${new Date().toLocaleTimeString('id-ID').replace(/:/g,'-')}`;
+
+    // Save metadata to localStorage
+    const recordings = ambilData("channelRecordings");
+    recordings.unshift({
+        id,
+        channel: channelAktif,
+        group: grupAktif,
+        filename,
+        duration,
+        size: blob.size,
+        mimeType: mediaRecorder.mimeType || 'audio/webm',
+        date: new Date().toLocaleString('id-ID'),
+        blobUrl: URL.createObjectURL(blob)
+    });
+    simpanData("channelRecordings", recordings.slice(0, 50)); // max 50 recordings metadata
+
+    // Auto download
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = filename + ".webm";
+    a.click();
+
+    renderRecList();
+    toast(`⏹️ Recording disimpan! (${formatDuration(duration)})`, "hijau");
+}
+
+function formatDuration(sec) {
+    const m = String(Math.floor(sec / 60)).padStart(2, '0');
+    const s = String(sec % 60).padStart(2, '0');
+    return `${m}:${s}`;
+}
+
+function renderRecList() {
+    const container = document.getElementById("recList");
+    if(!container) return;
+    const recordings = ambilData("channelRecordings").filter(r => r.channel === channelAktif);
+
+    if(recordings.length === 0) {
+        container.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:12px;padding:8px;">Belum ada recording</div>';
+        return;
+    }
+
+    container.innerHTML = recordings.slice(0, 10).map(r => `
+        <div class="rec-item">
+            <div>
+                <div class="rec-item-name">🎙️ ${r.filename.substring(0,25)}...</div>
+                <div class="rec-item-meta">${r.date} • ${formatDuration(r.duration)} • ${(r.size/1024).toFixed(1)} KB</div>
+            </div>
+            <div class="rec-item-actions">
+                <button class="btn btn-sm" onclick="playRecording('${r.id}')">▶️</button>
+                <button class="btn btn-sm btn-merah" onclick="deleteRecording('${r.id}')">🗑️</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function playRecording(id) {
+    const recordings = ambilData("channelRecordings");
+    const rec = recordings.find(r => r.id === id);
+    if(!rec || !rec.blobUrl) {
+        toast("Recording tidak ditemukan atau expired.", "merah");
+        return;
+    }
+    const audio = new Audio(rec.blobUrl);
+    audio.play();
+    toast("▶️ Memutar recording...", "hijau");
+}
+
+function deleteRecording(id) {
+    if(!confirm("Yakin hapus recording ini?")) return;
+    let recordings = ambilData("channelRecordings");
+    const rec = recordings.find(r => r.id === id);
+    if(rec && rec.blobUrl) URL.revokeObjectURL(rec.blobUrl);
+    recordings = recordings.filter(r => r.id !== id);
+    simpanData("channelRecordings", recordings);
+    renderRecList();
+    toast("Recording dihapus.", "kuning");
+}
+
+
+function updateNetworkSpeed() {
+    const el = document.getElementById("networkSpeed");
+    if(!el) return;
+
+    // Method 1: navigator.connection API (Chrome/Android)
+    const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    if(conn && conn.downlink) {
+        const kbps = Math.round(conn.downlink * 1024);
+        displayNetworkSpeed(kbps);
+        return;
+    }
+
+    // Method 2: Measure with fetch timing
+    measureNetworkSpeed().then(kbps => {
+        if(kbps !== null && kbps !== undefined) {
+            displayNetworkSpeed(kbps);
+        } else {
+            displayNetworkSpeed(null);
+        }
+    }).catch(() => {
+        displayNetworkSpeed(null);
+    });
+}
+
+function displayNetworkSpeed(kbps) {
+    const el = document.getElementById("networkSpeed");
+    if(!el) return;
+    lastNetSpeed = kbps;
+    let colorClass = "";
+    let statusText = "";
+
+    if(kbps === null || kbps === undefined) {
+        el.className = "network-speed";
+        el.textContent = "📡 Network: -- kb/s";
+        return;
+    }
+
+    if(kbps < 100) { colorClass = "bad"; statusText = " (lemah)"; }
+    else if(kbps < 500) { colorClass = "slow"; statusText = " (sedang)"; }
+    else { statusText = " (baik)"; }
+
+    el.className = "network-speed " + colorClass;
+    el.textContent = `📡 Network: ${kbps} kb/s${statusText}`;
+}
+
+async function measureNetworkSpeed() {
+    try {
+        // Gunakan data URI kecil untuk mengukur kecepatan lokal, tidak bergantung pada server eksternal
+        const testData = 'data:text/plain;base64,' + 'a'.repeat(1000); // ~1KB data
+        const start = performance.now();
+        const response = await fetch(testData, { cache: 'no-store' });
+        await response.text();
+        const end = performance.now();
+        const duration = (end - start) / 1000;
+        const sizeKB = 1;
+        const kbps = Math.round(sizeKB / Math.max(duration, 0.001));
+
+        // Juga cek navigator.connection API
+        const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+        if (conn && conn.downlink) {
+            const apiKbps = Math.round(conn.downlink * 1024);
+            return Math.max(kbps, apiKbps);
+        }
+
+        return kbps > 0 ? kbps : null;
+    } catch(e) {
+        // Fallback ke navigator.connection
+        const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+        if (conn && conn.downlink) {
+            return Math.round(conn.downlink * 1024);
+        }
+        return null;
+    }
+}
+
+function updateHeartbeat() {
+    if(!namaSaya || !channelAktif || !grupAktif) return;
+    syncPresenceToServer();
+    const sessions = ambilData("onlineSessions");
+    sessions[namaSaya] = { channel:channelAktif, group:grupAktif, micStatus:micAktif, floorStatus:myFloorStatus, timestamp:Date.now() };
+    simpanData("onlineSessions", sessions);
+}
+
+// ========== USER - DAFTAR GRUP ==========
+function hitungUserChannel(namaGrup, namaChannel) {
+    return Object.values(channelPresenceSessions || {}).filter(s =>
+        String(s?.group || s?.grup || '') === String(namaGrup) &&
+        String(s?.channel || s?.room || '') === String(namaChannel)
+    ).length;
+}
+
+function initChannelCountSocket() {
+    if(channelCountSocket?.connected) return;
+    if(!REALTIME_SERVER_URL || REALTIME_SERVER_URL.includes("YOUR-BACKEND")) return;
+
+    if(channelCountSocket) {
+        try { channelCountSocket.removeAllListeners(); } catch(_) {}
+        try { channelCountSocket.disconnect(); } catch(_) {}
+    }
+
+    channelCountSocket = io(REALTIME_SERVER_URL, {
+        transports:["websocket","polling"],
+        reconnection:true,
+        reconnectionAttempts:Infinity,
+        reconnectionDelay:800,
+        timeout:8000
+    });
+
+    channelCountSocket.on("presence:update", sessions => {
+        channelPresenceSessions = normalizeServerSessions(sessions);
+        try { muatDaftarGrup(); } catch(_) {}
+    });
+
+    channelCountSocket.on("disconnect", () => {
+        // Keep last known counts on screen until reconnect.
+    });
+}
+
+function muatDaftarGrup() {
+    initChannelCountSocket();
+    const wadah = document.getElementById("daftarGrupTampil");
+    const grup = ambilData("daftarGrup");
+    if(grup.length === 0) {
+        wadah.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📁</div>Tidak ada grup tersedia</div>';
+        return;
+    }
+
+    const isAdmin = namaSaya === ADMIN_NAMA;
+
+    wadah.innerHTML = grup.map(g => {
+        if(g.status !== "aktif") return '';
+
+        // Cek apakah user bisa masuk ke grup ini (step 1: group prefix)
+        const groupBlocked = !isAdmin && g.prefix && g.prefix !== "" && !namaSaya.startsWith(g.prefix);
+
+        let chHtml = g.channel.map(c => {
+            const locked = c.locked ? ' 🔒' : '';
+            const muted = c.muted ? ' 🔇' : '';
+            const userCount = hitungUserChannel(g.nama, c.nama);
+            const countBadge = ` <span title="User online di channel" style="display:inline-flex;align-items:center;gap:2px;font-size:11px;font-weight:700;padding:2px 7px;border-radius:999px;background:rgba(59,130,246,.14);">👥 ${userCount}</span>`;
+            const maxBadge = c.maxUsers && c.maxUsers > 0 ? ` <span title="Kapasitas maksimum" style="font-size:10px;color:#f472b6;">/ ${c.maxUsers}</span>` : '';
+            const cls = c.locked ? 'channel-locked' : (c.muted ? 'channel-muted' : '');
+
+            // Determine if user can enter this channel
+            let bolehMasuk = false;
+            if(isAdmin) {
+                bolehMasuk = true;
+            } else if(g.prefix && g.prefix !== "") {
+                // Group has prefix
+                if(namaSaya.startsWith(g.prefix)) {
+                    // User matches group prefix → access all channels
+                    bolehMasuk = true;
+                } else {
+                    // User doesn't match group prefix → check channel prefix
+                    bolehMasuk = c.prefix && c.prefix !== "" && namaSaya.startsWith(c.prefix);
+                }
+            } else {
+                // Group has no prefix → check channel prefix
+                bolehMasuk = !c.prefix || c.prefix === "" || namaSaya.startsWith(c.prefix);
+            }
+
+            const disabledStyle = bolehMasuk ? '' : 'opacity:0.4;pointer-events:none;';
+            const icon = bolehMasuk ? '🔊' : '🔐';
+
+            return `<div class="channel ${cls}" style="${disabledStyle}" onclick="${bolehMasuk ? `masukChannel('${g.nama}','${c.nama}')` : ''}">${icon} ${c.nama}${countBadge}${maxBadge}${locked}${muted}</div>`;
+        }).join('');
+
+        return `<div class="grup"><strong>📂 ${g.nama}</strong>${chHtml}</div>`;
+    }).join('');
+}
+
+// ========== MASUK CHANNEL ==========
+async function masukChannel(namaGrup, namaChannel) {
+    const grup = ambilData("daftarGrup");
+    const g = grup.find(x => x.nama === namaGrup);
+    if(!g) return toast("Grup tidak ditemukan!", "merah");
+    const c = g.channel.find(x => x.nama === namaChannel);
+    if(!c) return toast("Channel tidak ditemukan!", "merah");
+
+    // Cek permission dari PostgreSQL, bukan localStorage logPengguna.
+    // Login user sudah memakai PostgreSQL; validasi channel harus memakai sumber data yang sama.
+    let userData = null;
+    if(namaSaya === ADMIN_NAMA) {
+        userData = { nama: ADMIN_NAMA, role: "admin", status: "aktif", banned: false, muted: false };
+    } else {
+        try {
+            if(!userLoginPassword) throw new Error("Session user tidak tersedia. Silakan login kembali.");
+            const dataUser = await apiRequest('/api/auth/me', {
+                method:'POST',
+                body:JSON.stringify({nama:namaSaya,sandi:userLoginPassword})
+            });
+            userData = dataUser.user || null;
+        } catch(err) {
+            console.error('[CHANNEL] Gagal memverifikasi user PostgreSQL:', err);
+            return toast(`❌ Gagal memverifikasi user: ${err.message}`, "merah");
+        }
+    }
+    if(!userData) return toast(`Data user "${namaSaya}" tidak ditemukan di PostgreSQL!`, "merah");
+    if(userData.banned === true) return toast("Akun Anda di-banned!", "merah");
+    if(String(userData.status || '').toLowerCase() === "nonaktif") return toast("Akun Anda dinonaktifkan!", "merah");
+    if(g.status === "nonaktif") return toast("Grup ini dinonaktifkan!", "merah");
+    if(c.status === "nonaktif") return toast("Channel ini dinonaktifkan!", "merah");
+    if(c.locked) return toast("Channel ini terkunci! Hubungi admin.", "merah");
+
+    // ===== CEK PREFIX =====
+    // Admin selalu lolos
+    if(namaSaya === ADMIN_NAMA) {
+        // Admin bypass prefix check
+    }
+    // Step 1: Cek Group Prefix
+    else if(g.prefix && g.prefix !== "") {
+        if(namaSaya.startsWith(g.prefix)) {
+            // User cocok dengan Group Prefix → lolos semua channel di grup ini
+            // Skip cek channel prefix
+        } else {
+            // User tidak cocok dengan Group Prefix → lanjut cek Channel Prefix
+            if(c.prefix && c.prefix !== "" && !namaSaya.startsWith(c.prefix)) {
+                return toast(`Anda dilarang masuk`, "merah");
+            }
+            // Jika channel tanpa prefix dan group prefix tidak cocok → gagal
+            if(!c.prefix || c.prefix === "") {
+                return toast(`Anda dilarang masuk`, "merah");
+            }
+        }
+    }
+    // Step 2: Group tanpa prefix → cek Channel Prefix
+    else {
+        if(c.prefix && c.prefix !== "" && !namaSaya.startsWith(c.prefix)) {
+            return toast(`Anda dilarang masuk`, "merah");
+        }
+    }
+
+    // Cek MAX USERS
+    if(c.maxUsers && c.maxUsers > 0 && socket && realtimeConnected) {
+        const usersInChannel = Object.values(serverSessions).filter(s => s.channel === namaChannel && s.group === namaGrup).length;
+        if(usersInChannel >= c.maxUsers) return toast(`❌ Channel penuh! Maksimal ${c.maxUsers} user.`, "merah");
+    }
+
+    // Set PTT timeout untuk channel ini
+    pttTimeoutSeconds = c.pttTimeout || 0;
+
+    grupAktif = namaGrup;
+    channelAktif = namaChannel;
+    micAktif = true;
+    koneksi = {};
+    daftarNamaTerhubung = [namaSaya];
+
+    document.getElementById("namaChannelAktif").textContent = `${namaGrup} / ${namaChannel}`;
+    resetFloorState();
+    renderRecList();
+    document.getElementById("idSaya").textContent = "";
+    document.getElementById("jumlahPengguna").textContent = "";
+    document.getElementById("infoChannel").textContent = c.muted ? "🔇 Channel ini sedang muted (suara dimatikan)" : "";
+    document.getElementById("statusKoneksi").className = "status status-kuning";
+    document.getElementById("statusKoneksi").innerHTML = "🔌 <b>Langkah 1/4:</b> Menghubung ke server...";
+    document.getElementById("kotakObrolan").innerHTML = "";
+    tampilHalaman("halamanObrolan");
+
+    catatLog("BERGABUNG", namaChannel);
+    startHeartbeat();
+    startNetworkSpeedMonitor();
+
+    navigator.mediaDevices.getUserMedia({audio:true, video:false})
+    .then(async stream => {
+        streamSaya = stream;
+        // PTT: mic OFF by default, user harus tekan PTT/SPACE
+        streamSaya.getAudioTracks().forEach(track => track.enabled = false);
+        micAktif = false;
+
+        // Jika channel muted, tetap mute
+        if(c.muted) {
+            streamSaya.getAudioTracks().forEach(track => track.enabled = false);
+        }
+
+        // Room/presence server dipakai untuk discovery user.
+        initRealtimeSocket();
+
+        // Konfigurasi server PeerJS dengan fallback
+const PEERJS_SERVERS = [
+    {
+        host: "0.peerjs.com",
+        port: 443,
+        path: "/",
+        secure: true,
+        pingInterval: 5000,
+        debug: 2
+    }
+];
+
+
+
+async function createPeer() {
+    const serverConfig = PEERJS_SERVERS[currentServerIndex];
+    const peerId = peerIdSaya || ("kg-" + crypto.randomUUID());
+    peerIdSaya = peerId;
+
+    document.getElementById("statusKoneksi").className = "status status-kuning";
+    document.getElementById("statusKoneksi").innerHTML =
+        `🔌 <b>Langkah 1/4:</b> Memuat Cloudflare TURN dan menghubung ke ${serverConfig.host}...`;
+
+    // Ambil temporary ICE credentials dari backend Railway.
+    // Jika Cloudflare sementara gagal, STUN publik tetap menjadi fallback.
+    await loadCloudflareTurnConfig();
+
+    const fallbackStun = [
+        { urls: "stun:stun.l.google.com:19302" },
+        { urls: "stun:stun1.l.google.com:19302" }
+    ];
+    const iceServers = turnIceServers.length ? turnIceServers : fallbackStun;
+
+    const config = {
+        ...serverConfig,
+        config: {
+            iceServers,
+            iceCandidatePoolSize: 10
+        }
+    };
+
+    console.log(`[TURN] PeerJS ICE mode: ${turnIceServers.length ? "CLOUDFLARE TURN/STUN" : "STUN FALLBACK"}`);
+    return new Peer(peerId, config);
+}
+
+function handlePeerError(err) {
+    console.error("PeerJS Error:", err);
+
+    if (err.type === 'network' || err.type === 'socket-error' || err.type === 'server-error' || err.type === 'unavailable-id') {
+        peerReconnectAttempts++;
+
+        if (peerReconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+            // Coba server berikutnya
+            currentServerIndex = (currentServerIndex + 1) % PEERJS_SERVERS.length;
+            peerReconnectAttempts = 0;
+
+            if (currentServerIndex === 0) {
+                // Semua server sudah dicoba
+                document.getElementById("statusKoneksi").className = "status status-merah";
+                document.getElementById("statusKoneksi").innerHTML = `❌ <b>Gagal:</b> Semua server tidak merespons. Coba muat ulang halaman nanti.`;
+                toast("Semua server PeerJS tidak tersedia. Mode offline aktif.", "merah", 5000);
+                return;
+            }
+        }
+
+        document.getElementById("statusKoneksi").className = "status status-kuning";
+        document.getElementById("statusKoneksi").innerHTML = `🔄 <b>Retry:</b> Server gagal, mencoba ${PEERJS_SERVERS[currentServerIndex].host}... (${peerReconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})`;
+
+        if (peerReconnectTimer) clearTimeout(peerReconnectTimer);
+        peerReconnectTimer = setTimeout(async () => {
+            if (peer) peer.destroy();
+            peer = await createPeer();
+            setupPeerEvents();
+        }, 3000);
+    } else if (err.type === 'peer-unavailable') {
+        // Peer lain tidak tersedia, ini normal
+        console.log("Peer unavailable:", err);
+    } else {
+        document.getElementById("statusKoneksi").className = "status status-merah";
+        document.getElementById("statusKoneksi").innerHTML = `❌ <b>Error:</b> ${err.type} — ${err.message || 'Coba muat ulang halaman'}`;
+    }
+}
+
+function setupPeerEvents() {
+    if (!peer) return;
+
+    peer.on("open", id => {
+        peerReconnectAttempts = 0;
+        document.getElementById("idSaya").textContent = `🆔 ID Anda: ${id}`;
+        document.getElementById("jumlahPengguna").textContent = `👥 Pengguna: ${daftarNamaTerhubung.length} orang`;
+        document.getElementById("statusKoneksi").className = "status status-biru";
+        document.getElementById("statusKoneksi").innerHTML = "✅ <b>Langkah 2/4:</b> Terdaftar! Menyinkronkan room...";
+        peerIdSaya = id;
+        joinRealtimeRoom();
+        mulaiCariUlang();
+        perbaruiDaftarPengguna();
+    });
+
+    peer.on("connection", conn => {
+        koneksi[conn.peer] = conn;
+        aturKoneksi(conn);
+        perbaruiStatusTerhubung();
+    });
+
+    peer.on("call", panggilan => {
+        debugTrackMediaCall(panggilan, "IN");
+        panggilan.answer(streamSaya);
+        pasangSuara(panggilan);
+        perbaruiStatusTerhubung();
+    });
+
+    peer.on("error", handlePeerError);
+
+    peer.on("disconnected", () => {
+        document.getElementById("statusKoneksi").className = "status status-kuning";
+        document.getElementById("statusKoneksi").innerHTML = "🔄 <b>Terputus:</b> Mencoba menghubungkan kembali...";
+
+        if (peerReconnectTimer) clearTimeout(peerReconnectTimer);
+        peerReconnectTimer = setTimeout(() => {
+            if (peer && !peer.destroyed) {
+                peer.reconnect();
+            }
+        }, 2000);
+    });
+
+    peer.on("close", () => {
+        document.getElementById("statusKoneksi").className = "status status-kuning";
+        document.getElementById("statusKoneksi").innerHTML = "🔄 <b>Terputus:</b> Koneksi ditutup. Mencoba ulang...";
+    });
+}
+
+peer = await createPeer();
+setupPeerEvents();
+
+    })
+    .catch(e => {
+    console.error("=== GAGAL MASUK CHANNEL ===");
+    console.error("Nama error:", e?.name);
+    console.error("Pesan:", e?.message);
+    console.error("Error lengkap:", e);
+    console.error("Stack:", e?.stack);
+
+    document.getElementById("statusKoneksi").className =
+        "status status-merah";
+
+    if (
+        e?.name === "NotAllowedError" ||
+        e?.name === "PermissionDeniedError"
+    ) {
+        document.getElementById("statusKoneksi").innerHTML =
+            "❌ <b>Izin Mikrofon Ditolak</b> — Izinkan mikrofon di browser.";
+    }
+    else if (e?.name === "NotFoundError") {
+        document.getElementById("statusKoneksi").innerHTML =
+            "❌ <b>Mikrofon Tidak Ditemukan</b>";
+    }
+    else if (e?.name === "NotReadableError") {
+        document.getElementById("statusKoneksi").innerHTML =
+            "❌ <b>Mikrofon Tidak Bisa Digunakan</b> — mungkin sedang dipakai aplikasi lain.";
+    }
+    else {
+        document.getElementById("statusKoneksi").innerHTML =
+            `❌ <b>Error aplikasi:</b> ${e?.name || "Error"} — ${e?.message || "Tidak diketahui"}`;
+    }
+});
+}
+
+function mulaiCariUlang() {
+    if(socket && realtimeConnected) joinRealtimeRoom();
+}
+
+function perbaruiStatusTerhubung() {
+    document.getElementById("statusKoneksi").className = "status status-hijau";
+    document.getElementById("statusKoneksi").innerHTML = "✅ <b>SIAP!</b> Terhubung dengan rekan — Silakan bicara!";
+    document.getElementById("jumlahPengguna").textContent = `👥 Pengguna: ${daftarNamaTerhubung.length} orang`;
+}
+
+function perbaruiDaftarPengguna() {
+    const wadah = document.getElementById("daftarPengguna");
+    if(!wadah) return;
+    wadah.innerHTML = daftarNamaTerhubung.map(n => {
+        const isMe = n === namaSaya;
+        const isAdmin = n === ADMIN_NAMA;
+        let statusClass = 'user-idle';
+        let dotClass = 'mic-dot';
+        let statusIcon = '';
+
+        if(floorState.currentTalker === n) {
+            statusClass = 'user-talking';
+            dotClass = 'mic-dot mic-on';
+            statusIcon = '🎙️ ';
+        } else if(floorState.queue.includes(n)) {
+            statusClass = 'user-waiting';
+            dotClass = 'mic-dot';
+            statusIcon = '⏳ ';
+        }
+
+        const adminBadge = isAdmin ? '<span class="priority-badge">ADMIN</span>' : '';
+
+        return `<div class="user-item ${statusClass}">
+            <span class="${dotClass}"></span>
+            ${statusIcon}${n} ${adminBadge} ${isMe ? '(Anda)' : ''}
+        </div>`;
+    }).join('');
+    document.getElementById("jumlahPengguna").textContent = `👥 Pengguna: ${daftarNamaTerhubung.length} orang`;
+}
+
+function keluarChannel() {
+    try {
+        // Release floor if talking or waiting
+        if(myFloorStatus === 'talking' || myFloorStatus === 'waiting') {
+            try { pttUp(); } catch(e) { console.log("pttUp error:", e); }
+        }
+        if(isRecording) { try { stopRecording(); } catch(e) { console.log("stopRecording error:", e); } }
+
+        // Hentikan semua timer dan interval dulu
+        stopPttTimeout();
+        stopHeartbeat();
+        stopNetworkSpeedMonitor();
+        if(peerReconnectTimer) { clearTimeout(peerReconnectTimer); peerReconnectTimer = null; }
+        if(floorBroadcastInterval) { clearInterval(floorBroadcastInterval); floorBroadcastInterval = null; }
+
+        // Hentikan audio stream
+        if(streamSaya) {
+            try { streamSaya.getTracks().forEach(t => t.stop()); } catch(e) { console.log("stream stop error:", e); }
+            streamSaya = null;
+        }
+
+        if(socket && realtimeConnected) { try { socket.disconnect(); } catch(e) {} }
+        socket = null; realtimeConnected = false; peerIdSaya = null; serverSessions = {};
+
+        // Hancurkan peer
+        if(peer) {
+            try {
+                // Tutup semua koneksi dulu sebelum destroy peer
+                Object.values(koneksi).forEach(c => {
+                    try { if(c && c.open) c.close(); } catch(e) {}
+                });
+                peer.destroy();
+            } catch(e) {
+                console.log("Peer destroy error:", e);
+            }
+        }
+
+        // Reset state
+        peer = null;
+        koneksi = {};
+        daftarNamaTerhubung = [];
+        peerReconnectAttempts = 0;
+        currentServerIndex = 0;
+        pttPressed = false;
+        myFloorStatus = 'idle';
+
+        // Catat log
+        const ch = channelAktif;
+        channelAktif = "";
+        grupAktif = "";
+        if(ch) catatLog("KELUAR", ch);
+
+        // Pindah halaman
+        tampilHalaman("halamanDaftar");
+        muatDaftarGrup();
+
+        toast("Berhasil keluar channel", "hijau");
+    } catch(err) {
+        console.error("keluarChannel error:", err);
+        toast("Terjadi kesalahan saat keluar, mencoba reset...", "kuning");
+        // Force reset
+        channelAktif = "";
+        grupAktif = "";
+        peer = null;
+        koneksi = {};
+        tampilHalaman("halamanDaftar");
+        muatDaftarGrup();
+    }
+}
+
+function aturKoneksi(conn) {
+    conn.on("data", data => {
+        if(data.jenis === "pesan") tambahPesan(data.dari, data.isi);
+        if(data.jenis === "laporNama") {
+            if(!daftarNamaTerhubung.includes(data.nama)) daftarNamaTerhubung.push(data.nama);
+            perbaruiDaftarPengguna();
+            updateWhisperTargetList();
+        }
+        if(data.jenis === "floorState" || data.jenis === "floorPromote") {
+            receiveFloorState(data);
+        }
+        if(data.jenis === "whisperStart") {
+            // Saya adalah target whisper
+            playWhisperBeep();
+            toast(`🔒 ${data.dari} whisper ke Anda`, "ungu");
+            // Tampilkan indikator whisper di chat
+            const kotak = document.getElementById("kotakObrolan");
+            if(kotak) {
+                kotak.innerHTML += `<div class="pesan pesan-lain" style="border:1px solid #a855f7;background:#3b0764;"><div class="pengirim">${data.dari} 🔒 WHISPER</div><i>sedang berbicara secara pribadi...</i></div>`;
+                kotak.scrollTop = kotak.scrollHeight;
+            }
+        }
+        if(data.jenis === "whisperEnd") {
+            const kotak = document.getElementById("kotakObrolan");
+            if(kotak) {
+                kotak.innerHTML += `<div class="pesan pesan-lain" style="border:1px solid #a855f7;background:#3b0764;opacity:0.7;"><div class="pengirim">${data.dari} 🔒 WHISPER</div><i>whisper selesai</i></div>`;
+                kotak.scrollTop = kotak.scrollHeight;
+            }
+        }
+    });
+}
+function pasangSuara(panggilan) {
+    panggilan.on("stream", suaraOrang => {
+        const el = document.createElement("audio");
+        el.srcObject = suaraOrang;
+        el.autoplay = true;
+        el.id = "audio-" + Math.random().toString(36).substr(2, 9);
+        el.dataset.debugPlay = "pending";
+        document.body.appendChild(el);
+        // Diagnostic: explicitly ask browser to play and record autoplay rejection.
+        // This does not alter signaling/call logic.
+        const tryPlayRemote = async () => {
+            try {
+                const p = el.play();
+                if(p && typeof p.then === "function") await p;
+                el.dataset.debugPlay = "ok";
+                audioOutputUnlocked = true;
+                audioUnlockLastError = "-";
+            } catch(err) {
+                el.dataset.debugPlay = `blocked:${err?.name || "Error"}:${err?.message || ""}`;
+                audioUnlockLastError = err?.message || String(err);
+                console.warn("[AUDIO] play blocked; waiting for user gesture:", err);
+            }
+        };
+        tryPlayRemote();
+
+        // If recording is active, connect this incoming stream to the mixer
+        if(isRecording && audioContext && destinationNode) {
+            try {
+                const sourceIn = audioContext.createMediaStreamSource(suaraOrang);
+                sourceIn.connect(destinationNode);
+            } catch(e) { console.log("Failed to connect incoming stream to recorder", e); }
+        }
+    });
+}
+
+
+
+// ========== DEBUG v5: WEBRTC MEDIA / ICE / AUDIO OUTPUT ==========
+const debugMediaCalls = new Map();
+
+function debugTrackMediaCall(call, direction = "unknown") {
+    if(!call) return;
+    const key = `${direction}:${call.peer || "unknown"}:${Date.now()}:${Math.random()}`;
+    const row = {
+        key,
+        peer: call.peer || "-",
+        direction,
+        createdAt: new Date(),
+        streamReceived: false,
+        streamTracks: [],
+        closed: false,
+        error: "-",
+        call
+    };
+    debugMediaCalls.set(key, row);
+
+    try {
+        call.on("stream", stream => {
+            row.streamReceived = true;
+            row.streamTracks = stream.getAudioTracks().map(t => ({
+                readyState:t.readyState,
+                enabled:t.enabled,
+                muted:t.muted,
+                label:t.label || "-"
+            }));
+        });
+        call.on("close", () => { row.closed = true; });
+        call.on("error", err => { row.error = err?.type || err?.message || String(err); });
+    } catch(_) {}
+
+    // Keep diagnostics bounded.
+    if(debugMediaCalls.size > 30) {
+        const first = debugMediaCalls.keys().next().value;
+        debugMediaCalls.delete(first);
+    }
+}
+
+function debugGetPeerConnection(call) {
+    return call?.peerConnection || call?._negotiator?.peerConnection || null;
+}
+
+function debugMediaSnapshot() {
+    const calls = [];
+    for(const row of debugMediaCalls.values()) {
+        const pc = debugGetPeerConnection(row.call);
+        const receivers = pc?.getReceivers ? pc.getReceivers() : [];
+        const remoteAudioTracks = receivers
+            .map(r => r.track)
+            .filter(t => t && t.kind === "audio")
+            .map(t => ({readyState:t.readyState, enabled:t.enabled, muted:t.muted, label:t.label || "-"}));
+
+        calls.push({
+            peer:row.peer,
+            direction:row.direction,
+            ageSec:Math.round((Date.now()-row.createdAt.getTime())/1000),
+            streamReceived:row.streamReceived,
+            closed:row.closed,
+            error:row.error,
+            connectionState:pc?.connectionState || "-",
+            iceConnectionState:pc?.iceConnectionState || "-",
+            iceGatheringState:pc?.iceGatheringState || "-",
+            signalingState:pc?.signalingState || "-",
+            remoteAudioTracks
+        });
+    }
+
+    const audios = [...document.querySelectorAll("audio")].map((a,i) => {
+        const tracks = a.srcObject?.getAudioTracks ? a.srcObject.getAudioTracks() : [];
+        return {
+            index:i+1,
+            id:a.id || "-",
+            paused:a.paused,
+            muted:a.muted,
+            autoplay:a.autoplay,
+            volume:a.volume,
+            readyState:a.readyState,
+            networkState:a.networkState,
+            currentTime:Number.isFinite(a.currentTime) ? a.currentTime.toFixed(2) : "-",
+            tracks:tracks.map(t => ({readyState:t.readyState, enabled:t.enabled, muted:t.muted, label:t.label || "-"}))
+        };
+    });
+
+    return {calls,audios};
+}
+
+
+
+// ========== MOBILE AUDIO UNLOCK v1 ==========
+let audioOutputUnlocked = false;
+let audioUnlockLastError = "-";
+
+async function unlockAudioOutput() {
+    try {
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        if(Ctx) {
+            if(!window.__kgAudioContext) window.__kgAudioContext = new Ctx();
+            if(window.__kgAudioContext.state === "suspended") await window.__kgAudioContext.resume();
+        }
+
+        const audios = [...document.querySelectorAll("audio")];
+        let played = 0;
+        for(const el of audios) {
+            try {
+                el.muted = false;
+                el.volume = 1;
+                const p = el.play();
+                if(p && typeof p.then === "function") await p;
+                el.dataset.debugPlay = "ok";
+                played++;
+            } catch(err) {
+                el.dataset.debugPlay = `blocked:${err?.name || "Error"}:${err?.message || ""}`;
+            }
+        }
+
+        audioOutputUnlocked = true;
+        audioUnlockLastError = "-";
+        console.log(`[AUDIO] Output unlocked; retried ${audios.length}, playing ${played}`);
+        return true;
+    } catch(err) {
+        audioOutputUnlocked = false;
+        audioUnlockLastError = err?.message || String(err);
+        console.warn("[AUDIO] Unlock failed:", err);
+        return false;
+    }
+}
+
+["pointerdown","touchend","click"].forEach(evt => {
+    document.addEventListener(evt, () => { unlockAudioOutput(); }, {passive:true});
+});
+
+// ========== PTT & FLOOR CONTROL ==========
+function pttDown(e) {
+    if(e) e.preventDefault();
+    if(pttPressed) return;
+    if(!streamSaya) return;
+
+    // Cek muted
+    const users = ambilData("logPengguna");
+    const userData = users.find(u => u.nama === namaSaya);
+    if(userData && userData.muted) {
+        toast("Anda di-mute oleh admin! Tidak bisa bicara.", "merah");
+        return;
+    }
+
+    pttPressed = true;
+    const btn = document.getElementById("tombolPTT");
+    const isAdmin = namaSaya === ADMIN_NAMA;
+
+    // ===== PRIORITY PTT: Admin override =====
+    if(isAdmin && floorState.currentTalker && floorState.currentTalker !== namaSaya) {
+        // Admin ambil alih floor
+        const prevTalker = floorState.currentTalker;
+        floorState.currentTalker = namaSaya;
+        floorState.lastUpdate = Date.now();
+        // Prev talker masuk queue jika masih tekan PTT (tapi kita tidak tahu, jadi masukkan ke depan queue)
+        if(!floorState.queue.includes(prevTalker)) {
+            floorState.queue.unshift(prevTalker);
+        }
+        myFloorStatus = 'talking';
+        if(streamSaya) streamSaya.getAudioTracks().forEach(t => t.enabled = true);
+        micAktif = true;
+        if(btn) { btn.classList.add('ptt-active', 'ptt-priority'); btn.textContent = '👑 PRIORITY BICARA'; }
+        broadcastFloorState();
+        updateFloorDisplay();
+        perbaruiDaftarPengguna();
+        updateHeartbeat();
+        startPttTimeout();
+        return;
+    }
+
+    // ===== WHISPER MODE =====
+    if(whisperMode && whisperTarget) {
+        myFloorStatus = 'talking';
+        if(streamSaya) streamSaya.getAudioTracks().forEach(t => t.enabled = true);
+        micAktif = true;
+        if(btn) { btn.classList.add('ptt-active'); btn.textContent = '🔒 WHISPER...'; }
+        // Kirim whisper ke target
+        const targetPeerId = channelAktif + "-" + whisperTarget.replace(/\s/g,"-");
+        if(peer && !koneksi[targetPeerId]) {
+            try {
+                const conn = peer.connect(targetPeerId);
+                if(conn) {
+                    koneksi[targetPeerId] = conn;
+                    conn.on("open", () => {
+                        try { conn.send({jenis:"whisperStart", dari:namaSaya, target:whisperTarget}); } catch(e) {}
+                    });
+                    conn.on("error", err => { console.log("Whisper conn error:", err); });
+                }
+            } catch(e) { console.log("Whisper connect failed:", e); }
+        } else if(koneksi[targetPeerId]) {
+            try { koneksi[targetPeerId].send({jenis:"whisperStart", dari:namaSaya, target:whisperTarget}); } catch(e) { console.log("Whisper send failed:", e); }
+        }
+        // Call target untuk audio whisper
+        if(peer) {
+            const call = peer.call(targetPeerId, streamSaya);
+            if(call) { debugTrackMediaCall(call, 'OUT'); pasangSuara(call); }
+        }
+        updateHeartbeat();
+        startPttTimeout();
+        return;
+    }
+
+    // Cek floor state (normal)
+    if(!floorState.currentTalker) {
+        // Floor kosong → langsung jadi TALKING
+        myFloorStatus = 'talking';
+        floorState.currentTalker = namaSaya;
+        floorState.lastUpdate = Date.now();
+        if(streamSaya) streamSaya.getAudioTracks().forEach(t => t.enabled = true);
+        micAktif = true;
+        if(btn) { btn.classList.add('ptt-active'); btn.textContent = '🎙️ SEDANG BICARA'; }
+        broadcastFloorState();
+        updateFloorDisplay();
+        perbaruiDaftarPengguna();
+        updateHeartbeat();
+        startPttTimeout();
+    } else if(floorState.currentTalker === namaSaya) {
+        // Sudah talking → tetap
+        myFloorStatus = 'talking';
+        if(btn) { btn.classList.add('ptt-active'); btn.textContent = '🎙️ SEDANG BICARA'; }
+    } else {
+        // Ada yang talking → masuk queue
+        if(!floorState.queue.includes(namaSaya)) {
+            floorState.queue.push(namaSaya);
+        }
+        myFloorStatus = 'waiting';
+        if(btn) { btn.classList.add('ptt-waiting'); btn.textContent = '⏳ MENUNGGU...'; }
+        broadcastFloorState();
+        updateFloorDisplay();
+        perbaruiDaftarPengguna();
+    }
+}
+
+function pttUp(e) {
+    if(e) e.preventDefault();
+    if(!pttPressed) return;
+    pttPressed = false;
+    const btn = document.getElementById("tombolPTT");
+
+    // Clear timeout
+    stopPttTimeout();
+
+    if(whisperMode && whisperTarget) {
+        // Whisper mode up
+        myFloorStatus = 'idle';
+        if(streamSaya) streamSaya.getAudioTracks().forEach(t => t.enabled = false);
+        micAktif = false;
+        if(btn) { btn.classList.remove('ptt-active', 'ptt-priority'); btn.textContent = '🔒 Whisper ke ' + whisperTarget; }
+        // Kirim whisper end ke target
+        const targetPeerId = channelAktif + "-" + whisperTarget.replace(/\s/g,"-");
+        if(koneksi[targetPeerId]) {
+            try { koneksi[targetPeerId].send({jenis:"whisperEnd", dari:namaSaya}); } catch(e) { console.log("Whisper end failed:", e); }
+        }
+        updateHeartbeat();
+        return;
+    }
+
+    if(myFloorStatus === 'talking') {
+        // Saya berhenti bicara
+        myFloorStatus = 'idle';
+        floorState.currentTalker = null;
+        floorState.lastUpdate = Date.now();
+        if(streamSaya) streamSaya.getAudioTracks().forEach(t => t.enabled = false);
+        micAktif = false;
+        if(btn) { btn.classList.remove('ptt-active', 'ptt-priority'); btn.textContent = '🎙️ Tahan untuk Bicara'; }
+
+        // Promote next in queue
+        if(floorState.queue.length > 0) {
+            const next = floorState.queue.shift();
+            floorState.currentTalker = next;
+            floorState.lastUpdate = Date.now();
+            Object.values(koneksi).forEach(c => {
+                try {
+                    if(c && c.open) c.send({jenis:"floorPromote", nama: next});
+                } catch(e) {
+                    console.log("Floor promote failed:", e.message);
+                }
+            });
+        }
+        broadcastFloorState();
+        updateFloorDisplay();
+        perbaruiDaftarPengguna();
+        updateHeartbeat();
+    } else if(myFloorStatus === 'waiting') {
+        // Saya keluar dari queue
+        myFloorStatus = 'idle';
+        floorState.queue = floorState.queue.filter(n => n !== namaSaya);
+        if(btn) { btn.classList.remove('ptt-waiting', 'ptt-priority'); btn.textContent = '🎙️ Tahan untuk Bicara'; }
+        broadcastFloorState();
+        updateFloorDisplay();
+        perbaruiDaftarPengguna();
+    }
+}
+
+
+// ========== PTT TIMEOUT ==========
+function startPttTimeout() {
+    stopPttTimeout();
+    if(!pttTimeoutSeconds || pttTimeoutSeconds <= 0) return;
+
+    const bar = document.getElementById("timeoutBar");
+    const fill = document.getElementById("timeoutFill");
+    if(bar) bar.style.display = "block";
+    if(fill) {
+        fill.style.width = "100%";
+        fill.classList.remove("timeout-warning", "timeout-danger");
+    }
+
+    let elapsed = 0;
+    const total = pttTimeoutSeconds;
+    timeoutInterval = setInterval(() => {
+        elapsed++;
+        const pct = ((total - elapsed) / total) * 100;
+        if(fill) fill.style.width = pct + "%";
+
+        if(elapsed === Math.round(total * 0.7)) {
+            if(fill) fill.classList.add("timeout-warning");
+            playTimeoutWarningBeep();
+            toast(`⏱️ Peringatan: ${Math.round(total * 0.3)} detik tersisa!`, "kuning");
+        }
+        if(elapsed === Math.round(total * 0.9)) {
+            if(fill) fill.classList.add("timeout-danger");
+            playTimeoutDangerBeep();
+            toast(`⏱️ Segera selesai! ${Math.round(total * 0.1)} detik tersisa!`, "merah");
+        }
+
+        if(elapsed >= total) {
+            playTimeoutDangerBeep();
+            toast(`⏱️ PTT timeout! Batas ${total} detik tercapai.`, "kuning");
+            pttUp();
+        }
+    }, 1000);
+
+    // Fallback timer
+    pttTimer = setTimeout(() => {
+        if(pttPressed && myFloorStatus === 'talking') {
+            pttUp();
+        }
+    }, total * 1000);
+}
+
+function stopPttTimeout() {
+    if(timeoutInterval) { clearInterval(timeoutInterval); timeoutInterval = null; }
+    if(pttTimer) { clearTimeout(pttTimer); pttTimer = null; }
+    const bar = document.getElementById("timeoutBar");
+    if(bar) bar.style.display = "none";
+}
+
+// ========== WHISPER MODE ==========
+function toggleWhisperMode() {
+    const cb = document.getElementById("whisperToggle");
+    const targetBox = document.getElementById("whisperTargetBox");
+    const indicator = document.getElementById("whisperIndicator");
+    const btn = document.getElementById("tombolPTT");
+
+    whisperMode = cb.checked;
+    if(whisperMode) {
+        targetBox.style.display = "block";
+        indicator.classList.add("aktif");
+        updateWhisperTargetList();
+        if(btn) btn.textContent = '🔒 Pilih Target Whisper';
+        // Release floor if talking
+        if(myFloorStatus === 'talking' || myFloorStatus === 'waiting') {
+            pttUp();
+        }
+    } else {
+        targetBox.style.display = "none";
+        indicator.classList.remove("aktif");
+        whisperTarget = null;
+        document.getElementById("whisperTargetSelect").value = "";
+        if(btn) btn.textContent = '🎙️ Tahan untuk Bicara';
+    }
+}
+
+function updateWhisperTargetList() {
+    const sel = document.getElementById("whisperTargetSelect");
+    if(!sel) return;
+    sel.innerHTML = '<option value="">-- Pilih Target --</option>';
+    daftarNamaTerhubung.forEach(n => {
+        if(n !== namaSaya) {
+            sel.innerHTML += `<option value="${n}">${n}</option>`;
+        }
+    });
+}
+
+function onWhisperTargetChange() {
+    const sel = document.getElementById("whisperTargetSelect");
+    whisperTarget = sel.value || null;
+    const btn = document.getElementById("tombolPTT");
+    if(whisperTarget && btn) {
+        btn.textContent = '🔒 Whisper ke ' + whisperTarget;
+    } else if(btn) {
+        btn.textContent = '🔒 Pilih Target Whisper';
+    }
+}
+
+function broadcastFloorState() {
+    syncPresenceToServer();
+    if(socket && realtimeConnected) socket.emit("floor:event", { jenis:"floorState", state:floorState });
+    const payload = {jenis:"floorState", state: floorState};
+    Object.values(koneksi).forEach(c => {
+        try {
+            if(c && c.open) c.send(payload);
+        } catch(e) {
+            console.log("Broadcast failed to peer:", e.message);
+        }
+    });
+}
+
+function receiveFloorState(data) {
+    if(data.jenis === "floorState") {
+        floorState = data.state;
+        // Update my status based on received state
+        if(floorState.currentTalker === namaSaya) {
+            if(myFloorStatus !== 'talking') {
+                myFloorStatus = 'talking';
+                if(streamSaya) streamSaya.getAudioTracks().forEach(t => t.enabled = true);
+                micAktif = true;
+                const btn = document.getElementById("tombolPTT");
+                if(btn) { btn.classList.add('ptt-active'); btn.textContent = '🎙️ SEDANG BICARA'; }
+            }
+        } else if(floorState.queue.includes(namaSaya)) {
+            if(myFloorStatus !== 'waiting') {
+                myFloorStatus = 'waiting';
+                const btn = document.getElementById("tombolPTT");
+                if(btn && pttPressed) { btn.classList.add('ptt-waiting'); btn.textContent = '⏳ MENUNGGU...'; }
+            }
+        } else {
+            if(myFloorStatus !== 'idle') {
+                myFloorStatus = 'idle';
+                if(streamSaya) streamSaya.getAudioTracks().forEach(t => t.enabled = false);
+                micAktif = false;
+                const btn = document.getElementById("tombolPTT");
+                if(btn && !pttPressed) { btn.classList.remove('ptt-active','ptt-waiting'); btn.textContent = '🎙️ Tahan untuk Bicara'; }
+            }
+        }
+        updateFloorDisplay();
+        perbaruiDaftarPengguna();
+    }
+    if(data.jenis === "floorPromote") {
+        // Saya dipromosikan jadi talking
+        if(data.nama === namaSaya && myFloorStatus !== 'talking') {
+            playFloorBeep();
+            toast("🎙️ Giliran Anda bicara!", "hijau");
+            myFloorStatus = 'talking';
+            if(streamSaya) streamSaya.getAudioTracks().forEach(t => t.enabled = true);
+            micAktif = true;
+            const btn = document.getElementById("tombolPTT");
+            if(btn) { btn.classList.add('ptt-active'); btn.textContent = '🎙️ SEDANG BICARA'; btn.classList.remove('ptt-waiting'); }
+            updateFloorDisplay();
+            perbaruiDaftarPengguna();
+            updateHeartbeat();
+            startPttTimeout();
+        }
+    }
+}
+
+function updateFloorDisplay() {
+    const el = document.getElementById("floorStatusDisplay");
+    if(!el) return;
+
+    if(floorState.currentTalker) {
+        const isMe = floorState.currentTalker === namaSaya;
+        const queueText = floorState.queue.length > 0 ? ` (${floorState.queue.length} menunggu)` : '';
+        el.innerHTML = `<span class="floor-dot floor-dot-talking"></span><span class="floor-talking">🎙️ ${floorState.currentTalker} sedang bicara${queueText}</span>`;
+    } else if(floorState.queue.length > 0) {
+        el.innerHTML = `<span class="floor-dot floor-dot-waiting"></span><span class="floor-waiting">⏳ ${floorState.queue.join(', ')} menunggu</span>`;
+    } else {
+        el.innerHTML = `<span class="floor-dot floor-dot-idle"></span><span class="floor-idle">Tidak ada yang bicara</span>`;
+    }
+}
+
+function resetFloorState() {
+    floorState = { currentTalker: null, queue: [], lastUpdate: 0 };
+    myFloorStatus = 'idle';
+    pttPressed = false;
+    whisperMode = false;
+    whisperTarget = null;
+    pttTimeoutSeconds = 0;
+    stopPttTimeout();
+    const btn = document.getElementById("tombolPTT");
+    if(btn) { btn.classList.remove('ptt-active','ptt-waiting','ptt-priority'); btn.textContent = '🎙️ Tahan untuk Bicara'; }
+    const cb = document.getElementById("whisperToggle");
+    if(cb) cb.checked = false;
+    const targetBox = document.getElementById("whisperTargetBox");
+    if(targetBox) targetBox.style.display = "none";
+    const indicator = document.getElementById("whisperIndicator");
+    if(indicator) indicator.classList.remove("aktif");
+    updateFloorDisplay();
+}
+
+function gantiMic() {
+    // Fallback toggle mode (non-PTT) - sekarang deprecated, gunakan PTT
+    toast("Gunakan tombol PTT atau SPACE untuk bicara!", "kuning");
+}
+
+function kirimPesan() {
+    const users = ambilData("logPengguna");
+    const userData = users.find(u => u.nama === namaSaya);
+    if(userData && userData.muted) {
+        toast("Anda di-mute oleh admin! Tidak bisa mengirim pesan.", "merah");
+        return;
+    }
+    const teks = document.getElementById("inputPesan").value.trim();
+    if(!teks) return;
+    Object.values(koneksi).forEach(c => {
+        try { if(c && c.open) c.send({jenis:"pesan", dari:namaSaya, isi:teks}); } catch(e) { console.log("Send msg failed:", e.message); }
+    });
+    tambahPesan(namaSaya, teks);
+    document.getElementById("inputPesan").value = "";
+}
+function tambahPesan(pengirim, teks) {
+    const kotak = document.getElementById("kotakObrolan");
+    kotak.innerHTML += `<div class="pesan ${pengirim===namaSaya?'pesan-saya':'pesan-lain'}"><div class="pengirim">${pengirim}</div>${teks}</div>`;
+    kotak.scrollTop = kotak.scrollHeight;
+}
+
+// ========== CLOSE MODAL ON OVERLAY CLICK ==========
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', e => {
+        if(e.target === overlay) overlay.classList.remove('aktif');
+    });
+});
+
+// ========== INIT ==========
+// H2: Kredensial Admin tidak disimpan di localStorage.
+
+// ========== THEME INIT ==========
+loadTheme();
+
+// ========== SERVICE WORKER REGISTRATION (PWA) ==========
+
+// ========== ON-SCREEN DEBUG PANEL ==========
+function getDebugInfo() {
+    const peerOpen = !!(peer && peer.open);
+    const socketOpen = !!(socket && socket.connected);
+    const peerId = (peer && peer.id) ? peer.id : (peerIdSaya || "-");
+    const connectionRows = Object.entries(koneksi || {}).map(([id, conn]) => ({
+        id,
+        open: !!conn?.open,
+        type: conn?.type || "data"
+    }));
+    const sessionRows = Object.values(serverSessions || {}).map(s => ({
+        nama: s?.nama || "-",
+        peerId: s?.peerId || "-",
+        room: s?.room || s?.channel || "-",
+        socketId: s?.socketId || s?.id || "-"
+    }));
+
+    return {
+        waktu: new Date().toLocaleString(),
+        user: namaSaya || "-",
+        group: grupAktif || "-",
+        channel: channelAktif || "-",
+        online: navigator.onLine,
+        socketConnected: socketOpen,
+        socketId: socket?.id || "-",
+        peerOpen,
+        peerId,
+        peerIdSaya: peerIdSaya || "-",
+        micStream: !!streamSaya,
+        micTracks: streamSaya ? streamSaya.getAudioTracks().map(t => ({
+            enabled: t.enabled,
+            muted: t.muted,
+            readyState: t.readyState,
+            label: t.label || "-"
+        })) : [],
+        peerConnections: connectionRows,
+        serverSessions: sessionRows,
+        floorTalker: floorState?.currentTalker || "-",
+        floorStatus: myFloorStatus || "-",
+        turnStatus: turnConfigStatus,
+        turnServers: turnIceServers.length,
+        turnError: turnConfigError || "-",
+        turnLoadedAt: turnLoadedAt ? turnLoadedAt.toLocaleString() : "-",
+        mediaDebug: debugMediaSnapshot(),
+        audioOutputUnlocked,
+        audioUnlockLastError,
+        audioContextState: window.__kgAudioContext?.state || "-"
+    };
+}
+
+function formatDebugInfo(d) {
+    const yesNo = v => v ? "YES" : "NO";
+    const lines = [
+        `DEBUG UI   : ${DEBUG_UI_VERSION}`,
+        `TIME       : ${d.waktu}`,
+        `USER       : ${d.user}`,
+        `GROUP      : ${d.group}`,
+        `CHANNEL    : ${d.channel}`,
+        `ONLINE     : ${yesNo(d.online)}`,
+        `SOCKET     : ${d.socketConnected ? "CONNECTED" : "DISCONNECTED"}`,
+        `SOCKET ID  : ${d.socketId}`,
+        `PEER OPEN  : ${yesNo(d.peerOpen)}`,
+        `PEER ID    : ${d.peerId}`,
+        `PEER SERVER: ${d.peerIdSaya}`,
+        `TURN CONFIG: ${d.turnStatus}`,
+        `TURN SERVERS: ${d.turnServers}`,
+        `TURN LOADED: ${d.turnLoadedAt}`,
+        `TURN ERROR : ${d.turnError}`,
+        `MIC STREAM : ${yesNo(d.micStream)}`,
+        `FLOOR      : ${d.floorStatus} / ${d.floorTalker}`,
+        ``,
+        `MIC TRACKS (${d.micTracks.length})`
+    ];
+    if (!d.micTracks.length) lines.push("  - none");
+    d.micTracks.forEach((t,i) => lines.push(
+        `  ${i+1}. ${t.readyState} | enabled=${t.enabled} | muted=${t.muted} | ${t.label}`
+    ));
+
+    lines.push("", `PEER DATA CONNECTIONS (${d.peerConnections.length})`);
+    if (!d.peerConnections.length) lines.push("  - none");
+    d.peerConnections.forEach((c,i) => lines.push(
+        `  ${i+1}. ${c.open ? "OPEN" : "CLOSED"} | ${c.id}`
+    ));
+
+    const media = d.mediaDebug || {calls:[],audios:[]};
+    lines.push("", `MEDIA CONNECTIONS (${media.calls.length})`);
+    if(!media.calls.length) lines.push("  - none");
+    media.calls.forEach((c,i) => {
+        lines.push(`  ${i+1}. ${c.direction} | peer=${c.peer} | age=${c.ageSec}s`);
+        lines.push(`     PC=${c.connectionState} | ICE=${c.iceConnectionState} | GATHER=${c.iceGatheringState} | SIGNAL=${c.signalingState}`);
+        lines.push(`     STREAM=${c.streamReceived ? "YES" : "NO"} | CLOSED=${c.closed} | ERROR=${c.error}`);
+        if(!c.remoteAudioTracks.length) lines.push("     REMOTE AUDIO TRACK: none");
+        c.remoteAudioTracks.forEach((t,j) => lines.push(
+            `     TRACK ${j+1}: ${t.readyState} | enabled=${t.enabled} | muted=${t.muted} | ${t.label}`
+        ));
+    });
+
+    lines.push("", "AUDIO UNLOCK");
+    lines.push(`  STATUS     : ${d.audioOutputUnlocked ? "UNLOCKED" : "LOCKED"}`);
+    lines.push(`  CONTEXT    : ${d.audioContextState}`);
+    lines.push(`  LAST ERROR : ${d.audioUnlockLastError}`);
+
+    lines.push("", `AUDIO OUTPUT (${media.audios.length})`);
+    if(!media.audios.length) lines.push("  - none");
+    media.audios.forEach(a => {
+        const el = document.getElementById(a.id);
+        const playState = el?.dataset?.debugPlay || "-";
+        lines.push(`  ${a.index}. ${a.id} | paused=${a.paused} | muted=${a.muted} | autoplay=${a.autoplay} | volume=${a.volume}`);
+        lines.push(`     ready=${a.readyState} | network=${a.networkState} | time=${a.currentTime} | play=${playState}`);
+        if(!a.tracks.length) lines.push("     AUDIO TRACK: none");
+        a.tracks.forEach((t,j) => lines.push(
+            `     TRACK ${j+1}: ${t.readyState} | enabled=${t.enabled} | muted=${t.muted} | ${t.label}`
+        ));
+    });
+
+    lines.push("", `SERVER SESSIONS (${d.serverSessions.length})`);
+    if (!d.serverSessions.length) lines.push("  - none");
+    d.serverSessions.forEach((s,i) => lines.push(
+        `  ${i+1}. ${s.nama} | peer=${s.peerId} | room=${s.room}`
+    ));
+    return lines.join("\n");
+}
+
+function refreshDebugPanel() {
+    const out = document.getElementById("debugOutput");
+    if (!out) return;
+    try {
+        out.textContent = formatDebugInfo(getDebugInfo());
+    } catch (err) {
+        out.textContent = "DEBUG ERROR: " + (err?.message || err);
+    }
+}
+
+function toggleDebugPanel() {
+    const panel = document.getElementById("debugPanel");
+    if (!panel) return;
+    panel.classList.toggle("aktif");
+    if (panel.classList.contains("aktif")) refreshDebugPanel();
+}
+
+async function copyDebugInfo() {
+    const out = document.getElementById("debugOutput");
+    if (!out) return;
+    try {
+        await navigator.clipboard.writeText(out.textContent);
+        toast("Debug info disalin.", "hijau");
+    } catch (e) {
+        toast("Gagal menyalin debug.", "merah");
+    }
+}
+
+// Refresh otomatis hanya saat panel terbuka.
+setInterval(() => {
+    const panel = document.getElementById("debugPanel");
+    if (panel?.classList.contains("aktif")) refreshDebugPanel();
+}, 2000);
+
+
+
+// ========== DEBUG GLOBAL v2 ==========
+const DEBUG_UI_VERSION = "DEBUG-GLOBAL-v6-AUDIO-UNLOCK";
+const FRONTEND_BUILD = "2.8.0-J1-CHANNEL-USER-COUNT";
+
+function ensureGlobalDebugUI() {
+    if (!document.body) return;
+
+    let fab = document.getElementById("debugFab");
+    if (!fab) {
+        fab = document.createElement("button");
+        fab.id = "debugFab";
+        fab.type = "button";
+        fab.textContent = "D";
+        fab.title = "Debug koneksi";
+        fab.setAttribute("aria-label", "Debug koneksi");
+        fab.onclick = toggleDebugPanel;
+        document.body.appendChild(fab);
+    }
+
+    let panel = document.getElementById("debugPanel");
+    if (!panel) {
+        panel = document.createElement("div");
+        panel.id = "debugPanel";
+        panel.innerHTML = `
+            <div class="debug-head">
+                <strong>🛠 DEBUG GLOBAL v6 AUDIO UNLOCK</strong>
+                <div class="debug-actions">
+                    <button class="debug-mini-btn" type="button" onclick="refreshDebugPanel()">↻ Refresh</button>
+                    <button class="debug-mini-btn" type="button" onclick="copyDebugInfo()">📋 Copy</button>
+                    <button class="debug-mini-btn" type="button" onclick="toggleDebugPanel()">✕</button>
+                </div>
+            </div>
+            <pre id="debugOutput">Tekan Refresh untuk membaca status perangkat.</pre>
+        `;
+        document.body.appendChild(panel);
+    }
+
+    Object.assign(fab.style, {
+        display: "block",
+        visibility: "visible",
+        opacity: "1",
+        position: "fixed",
+        right: "14px",
+        bottom: "14px",
+        zIndex: "2147483646"
+    });
+    panel.style.zIndex = "2147483647";
+}
+
+function startGlobalDebugUI() {
+    ensureGlobalDebugUI();
+    setInterval(ensureGlobalDebugUI, 1500);
+
+    try {
+        const obs = new MutationObserver(() => {
+            if (!document.getElementById("debugFab") || !document.getElementById("debugPanel")) {
+                ensureGlobalDebugUI();
+            }
+        });
+        obs.observe(document.body, { childList: true, subtree: true });
+    } catch (_) {}
+}
+
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", startGlobalDebugUI, { once: true });
+} else {
+    startGlobalDebugUI();
+}
+
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+            .then(reg => console.log('[PWA] SW registered:', reg.scope))
+            .catch(err => {
+                console.log('[PWA] SW failed (normal jika sw.js belum dibuat):', err.message);
+                // Tidak mengganggu fungsionalitas utama
+            });
+    });
+}
+
+// ========== PTT KEYBOARD LISTENER ==========
+document.addEventListener('keydown', e => {
+    if(e.code === 'Space' && !e.repeat && document.activeElement.tagName !== 'INPUT') {
+        e.preventDefault();
+        pttDown();
+    }
+});
+document.addEventListener('keyup', e => {
+    if(e.code === 'Space' && pttPressed) {
+        e.preventDefault();
+        pttUp();
+    }
+});
+</script>
+</body>
+</html>
