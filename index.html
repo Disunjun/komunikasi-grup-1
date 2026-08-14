@@ -891,6 +891,7 @@ const ADMIN_NAMA = "Didik Suntoro";
 let userLoginPassword = "";
 let adminToken = sessionStorage.getItem("kgAdminToken") || "";
 let adminTokenExpiresAt = sessionStorage.getItem("kgAdminTokenExpiresAt") || "";
+let userToken = sessionStorage.getItem("kgUserToken") || "";
 let namaSaya = "", channelAktif = "", grupAktif = "", peer = null, koneksi = {}, streamSaya = null;
 let micAktif = true;
 let daftarNamaTerhubung = [];
@@ -935,6 +936,10 @@ let turnIceServers = [];
 let turnConfigStatus = "NOT LOADED";
 let turnConfigError = "";
 let turnLoadedAt = null;
+
+function escapeHtml(s) {
+    return String(s ?? "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
 
 async function loadCloudflareTurnConfig() {
     turnConfigStatus = "LOADING";
@@ -1142,6 +1147,8 @@ async function keluarSistem() {
     adminTokenExpiresAt = "";
     sessionStorage.removeItem("kgAdminToken");
     sessionStorage.removeItem("kgAdminTokenExpiresAt");
+    userToken = "";
+    sessionStorage.removeItem("kgUserToken");
     namaSaya = "";
     userLoginPassword = "";
     if(monitoringInterval) clearInterval(monitoringInterval);
@@ -1223,6 +1230,8 @@ async function masukSistem() {
     try {
         const data = await apiRequest('/api/auth/login', { method:'POST', body:JSON.stringify({nama,sandi}) });
         userLoginPassword = sandi; // memory-only; tidak disimpan ke browser storage
+        userToken = data.token || "";
+        sessionStorage.setItem("kgUserToken", userToken);
         namaSaya = data.user.nama;
         tampilHalaman("halamanDaftar");
         await muatGroupsPostgreSQL(true);
@@ -2210,6 +2219,7 @@ function initAdminRealtimeSocket() {
     }
 
     socket = io(REALTIME_SERVER_URL, {
+        auth: { token: adminToken },
         transports:["websocket","polling"],
         reconnection:true,
         reconnectionAttempts:Infinity,
@@ -2358,7 +2368,7 @@ function joinRealtimeRoom() {
     if(!socket || !realtimeConnected || !peerIdSaya) return;
     const grup = ambilData("daftarGrup").find(g => g.nama === grupAktif);
     const ch = grup?.channel?.find(c => c.nama === channelAktif);
-    socket.emit("room:join", { nama:namaSaya, group:grupAktif, channel:channelAktif, peerId:peerIdSaya, maxUsers:ch?.maxUsers || 0 });
+    socket.emit("room:join", { nama:namaSaya, group:grupAktif, channel:channelAktif, peerId:peerIdSaya, maxUsers:ch?.maxUsers || 0, token:userToken });
 }
 function syncPresenceToServer() {
     if(socket && realtimeConnected) socket.emit("presence:update", { micStatus:micAktif, floorStatus:myFloorStatus });
@@ -3275,14 +3285,14 @@ function aturKoneksi(conn) {
             // Tampilkan indikator whisper di chat
             const kotak = document.getElementById("kotakObrolan");
             if(kotak) {
-                kotak.innerHTML += `<div class="pesan pesan-lain" style="border:1px solid #a855f7;background:#3b0764;"><div class="pengirim">${data.dari} 🔒 WHISPER</div><i>sedang berbicara secara pribadi...</i></div>`;
+                kotak.innerHTML += `<div class="pesan pesan-lain" style="border:1px solid #a855f7;background:#3b0764;"><div class="pengirim">${escapeHtml(data.dari)} 🔒 WHISPER</div><i>sedang berbicara secara pribadi...</i></div>`;
                 kotak.scrollTop = kotak.scrollHeight;
             }
         }
         if(data.jenis === "whisperEnd") {
             const kotak = document.getElementById("kotakObrolan");
             if(kotak) {
-                kotak.innerHTML += `<div class="pesan pesan-lain" style="border:1px solid #a855f7;background:#3b0764;opacity:0.7;"><div class="pengirim">${data.dari} 🔒 WHISPER</div><i>whisper selesai</i></div>`;
+                kotak.innerHTML += `<div class="pesan pesan-lain" style="border:1px solid #a855f7;background:#3b0764;opacity:0.7;"><div class="pengirim">${escapeHtml(data.dari)} 🔒 WHISPER</div><i>whisper selesai</i></div>`;
                 kotak.scrollTop = kotak.scrollHeight;
             }
         }
@@ -3841,7 +3851,7 @@ function kirimPesan() {
 }
 function tambahPesan(pengirim, teks) {
     const kotak = document.getElementById("kotakObrolan");
-    kotak.innerHTML += `<div class="pesan ${pengirim===namaSaya?'pesan-saya':'pesan-lain'}"><div class="pengirim">${pengirim}</div>${teks}</div>`;
+    kotak.innerHTML += `<div class="pesan ${pengirim===namaSaya?'pesan-saya':'pesan-lain'}"><div class="pengirim">${escapeHtml(pengirim)}</div>${escapeHtml(teks)}</div>`;
     kotak.scrollTop = kotak.scrollHeight;
 }
 

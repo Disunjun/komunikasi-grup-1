@@ -1,4 +1,4 @@
-const CACHE_NAME = 'komgrup-v1';
+const CACHE_NAME = 'komgrup-v2';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -43,6 +43,12 @@ self.addEventListener('fetch', event => {
 
   // Skip chrome-extension and other non-http schemes
   if (!url.protocol.startsWith('http')) return;
+
+  // Jangan cache API atau request lintas-origin (hindari data basi)
+  if (url.origin !== self.location.origin || url.pathname.startsWith('/api/')) {
+    event.respondWith(fetch(request).catch(() => new Response('Offline', { status: 503 })));
+    return;
+  }
 
   // For static assets: cache first
   if (STATIC_ASSETS.includes(url.pathname)) {
