@@ -2976,21 +2976,87 @@ async function masukChannel(namaGrup, namaChannel) {
     startNetworkSpeedMonitor();
 
     navigator.mediaDevices.getUserMedia({audio:true, video:false})
-    .then(async stream => {
+    .then(stream => sambungkanRealtime(stream))
+    .catch(e => {
+        console.error("=== GAGAL AKSES MIKROFON ===");
+        console.error("Nama error:", e?.name);
+        console.error("Pesan:", e?.message);
+
+        // Mode dengar saja: tetap sambung socket/peer memakai stream senyap,
+        // sehingga user tetap bisa mendengar & chat walau mic ditolak/tidak ada.
+        const silent = buatStreamDiam();
+        if (silent) {
+            modeDengarSaja = true;
+            document.getElementById("statusKoneksi").className = "status status-kuning";
+            document.getElementById("statusKoneksi").innerHTML = "🔇 <b>Mode dengar saja:</b> Mikrofon tidak tersedia/ditolak. Anda tetap bisa mendengar & chat.";
+            toast("🔇 Mikrofon tidak tersedia/ditolak — mode dengar saja (tidak bisa bicara).", "kuning", 7000);
+            sambungkanRealtime(silent);
+            return;
+        }
+
+        document.getElementById("statusKoneksi").className = "status status-merah";
+
+        if (e?.name === "NotAllowedError" || e?.name === "PermissionDeniedError") {
+            document.getElementById("statusKoneksi").innerHTML = "❌ <b>Izin Mikrofon Ditolak</b> — Izinkan mikrofon di browser.";
+        }
+        else if (e?.name === "NotFoundError") {
+            document.getElementById("statusKoneksi").innerHTML = "❌ <b>Mikrofon Tidak Ditemukan</b>";
+        }
+        else if (e?.name === "NotReadableError") {
+            document.getElementById("statusKoneksi").innerHTML = "❌ <b>Mikrofon Tidak Bisa Digunakan</b> — mungkin sedang dipakai aplikasi lain.";
+        }
+        else {
+            document.getElementById("statusKoneksi").innerHTML = `❌ <b>Error aplikasi:</b> ${e?.name || "Error"} — ${e?.message || "Tidak diketahui"}`;
+        }
+    });
+
+    let silentAudioRefs = null;
+    let modeDengarSaja = false;
+
+    function buatStreamDiam() {
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const dst = ctx.createMediaStreamDestination();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            gain.gain.value = 0;
+            osc.connect(gain);
+            gain.connect(dst);
+            osc.start();
+            silentAudioRefs = { ctx, osc, gain, dst };
+            return dst.stream;
+        } catch(err) {
+            console.error("[MIC] Gagal membuat stream senyap:", err?.message);
+            return null;
+        }
+    }
+
+    async function sambungkanRealtime(stream) {
         streamSaya = stream;
         // PTT: mic OFF by default, user harus tekan PTT/SPACE
         streamSaya.getAudioTracks().forEach(track => track.enabled = false);
         micAktif = false;
 
         // Jika channel muted, tetap mute
-        if(c.muted) {
+        const grpCh = ambilData("daftarGrup").find(g => g.nama === grupAktif);
+        const ch = grpCh?.channel?.find(x => x.nama === channelAktif);
+        if(ch?.muted) {
             streamSaya.getAudioTracks().forEach(track => track.enabled = false);
         }
 
         // Room/presence server dipakai untuk discovery user.
         initRealtimeSocket();
 
-        // Konfigurasi server PeerJS dengan fallback
+        peer = await createPeer();
+        setupPeerEvents();
+
+        if(modeDengarSaja) {
+            document.getElementById("statusKoneksi").className = "status status-kuning";
+            document.getElementById("statusKoneksi").innerHTML = "🔇 <b>Mode dengar saja:</b> Mikrofon tidak tersedia/ditolak. Anda tetap bisa mendengar & chat.";
+        }
+    }
+
+    // Konfigurasi server PeerJS dengan fallback
 const PEERJS_SERVERS = [
     {
         host: "0.peerjs.com",
@@ -3120,42 +3186,8 @@ function setupPeerEvents() {
         document.getElementById("statusKoneksi").innerHTML = "🔄 <b>Terputus:</b> Koneksi ditutup. Mencoba ulang...";
     });
 }
-
-peer = await createPeer();
-setupPeerEvents();
-
-    })
-    .catch(e => {
-    console.error("=== GAGAL MASUK CHANNEL ===");
-    console.error("Nama error:", e?.name);
-    console.error("Pesan:", e?.message);
-    console.error("Error lengkap:", e);
-    console.error("Stack:", e?.stack);
-
-    document.getElementById("statusKoneksi").className =
-        "status status-merah";
-
-    if (
-        e?.name === "NotAllowedError" ||
-        e?.name === "PermissionDeniedError"
-    ) {
-        document.getElementById("statusKoneksi").innerHTML =
-            "❌ <b>Izin Mikrofon Ditolak</b> — Izinkan mikrofon di browser.";
-    }
-    else if (e?.name === "NotFoundError") {
-        document.getElementById("statusKoneksi").innerHTML =
-            "❌ <b>Mikrofon Tidak Ditemukan</b>";
-    }
-    else if (e?.name === "NotReadableError") {
-        document.getElementById("statusKoneksi").innerHTML =
-            "❌ <b>Mikrofon Tidak Bisa Digunakan</b> — mungkin sedang dipakai aplikasi lain.";
-    }
-    else {
-        document.getElementById("statusKoneksi").innerHTML =
-            `❌ <b>Error aplikasi:</b> ${e?.name || "Error"} — ${e?.message || "Tidak diketahui"}`;
-    }
-});
 }
+
 
 function mulaiCariUlang() {
     if(socket && realtimeConnected) joinRealtimeRoom();

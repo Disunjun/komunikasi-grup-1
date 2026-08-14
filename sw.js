@@ -1,4 +1,4 @@
-const CACHE_NAME = 'komgrup-v3';
+const CACHE_NAME = 'komgrup-v4';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
