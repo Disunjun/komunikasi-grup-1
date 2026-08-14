@@ -1,4 +1,4 @@
-# Komunikasi Group v2
+# komunikasi-grup-1
 
 Aplikasi komunikasi grup berbasis web (suara WebRTC + teks + panel admin). Frontend PWA di Netlify, backend Node.js (Express + Socket.IO) di Railway/Render/VM.
 
