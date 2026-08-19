@@ -12,14 +12,58 @@ const scryptAsync = promisify(crypto.scrypt);
 const app = express();
 const server = http.createServer(app);
 const PORT = Number(process.env.PORT || 3000);
-const FRONTEND_ORIGINS = (process.env.FRONTEND_ORIGINS || '*').split(',').map(s => s.trim()).filter(Boolean);
+const FRONTEND_ORIGINS = (process.env.FRONTEND_ORIGINS || '')
+  .split(',')
+  .map(s => s.trim())
+  .filter(Boolean);
 const ADMIN_NAME = process.env.ADMIN_NAME || 'Didik Suntoro';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'D1d1kSunt0r0@#$';
 
-const corsOrigin = FRONTEND_ORIGINS.includes('*') ? true : FRONTEND_ORIGINS;
-const io = new Server(server, { cors: { origin: corsOrigin, methods: ['GET','POST','PATCH','DELETE'] }, transports: ['websocket','polling'] });
-app.use(cors({ origin: corsOrigin }));
+// ===== CORS / FRONTEND ACCESS =====
+// Production frontend is explicitly allowed. Keep the old frontend origin
+// during the migration so an older cached client is not unexpectedly blocked.
+const ALLOWED_CORS_ORIGINS = Array.from(new Set([
+  ...FRONTEND_ORIGINS,
+  'https://komunikasi-group-1.netlify.app',
+  'https://komunikasi-group.netlify.app'
+]));
+
+function corsOriginAllowed(origin) {
+  if (!origin) return true; // server-to-server / curl / health checks
+  if (ALLOWED_CORS_ORIGINS.includes('*')) return true;
+  return ALLOWED_CORS_ORIGINS.includes(origin);
+}
+
+const corsOptions = {
+  origin(origin, callback) {
+    if (corsOriginAllowed(origin)) return callback(null, true);
+    console.warn(`[CORS] Origin ditolak: ${origin}`);
+    return callback(null, false);
+  },
+  methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  optionsSuccessStatus: 204
+};
+
+const io = new Server(server, {
+  cors: {
+    origin: (origin, callback) => {
+      if (corsOriginAllowed(origin)) return callback(null, true);
+      console.warn(`[SOCKET CORS] Origin ditolak: ${origin}`);
+      return callback(null, false);
+    },
+    methods: corsOptions.methods,
+    allowedHeaders: corsOptions.allowedHeaders
+  },
+  transports: ['websocket', 'polling']
+});
+
+// Express-level CORS handles browser preflight (OPTIONS) before auth routes.
+app.use(cors(corsOptions));
+app.options(/.*/, cors(corsOptions));
 app.use(express.json({ limit: '64kb' }));
+
+console.log('[CORS] Allowed origins:', ALLOWED_CORS_ORIGINS.join(', '));
 
 let db = null;
 if (process.env.DATABASE_URL) {
