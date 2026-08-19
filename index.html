@@ -922,7 +922,9 @@ let heartbeatInterval = null;
 let monitoringInterval = null;
 
 // ========== REALTIME SERVER V2 ==========
-const REALTIME_SERVER_URL = window.REALTIME_SERVER_URL || "https://komunikasi-group-1-production.up.railway.app";
+// G1 AUTH/NETWORK FIX: production backend is the dedicated komunikasi-group-1 service.
+// A runtime override is still supported, but the URL is normalized to avoid double slashes.
+const REALTIME_SERVER_URL = String(window.REALTIME_SERVER_URL || "https://komunikasi-group-1-production.up.railway.app").replace(/\/$/, "");
 let socket = null;
 let channelCountSocket = null;
 let channelPresenceSessions = {};
@@ -1162,14 +1164,51 @@ function kembaliKeMasuk() { tampilHalaman("halamanMasuk"); }
 
 // ========== AUTH & LOGIN (POSTGRESQL) ==========
 async function apiRequest(path, options = {}, admin = false) {
-    const headers = { "Content-Type": "application/json", ...(options.headers || {}) };
+    if(!REALTIME_SERVER_URL || REALTIME_SERVER_URL.includes("YOUR-BACKEND")) {
+        throw new Error("URL backend realtime belum dikonfigurasi.");
+    }
+
+    const headers = { "Accept": "application/json", ...(options.headers || {}) };
+    if(options.body != null && !headers["Content-Type"] && !headers["content-type"]) {
+        headers["Content-Type"] = "application/json";
+    }
+
     if(admin) {
         if(!adminToken) throw new Error("Session Admin tidak tersedia. Silakan login kembali.");
         headers["Authorization"] = `Bearer ${adminToken}`;
+    } else if(userToken) {
+        // A1.4/A1.5 user-token backend compatibility.
+        headers["Authorization"] = `Bearer ${userToken}`;
     }
-    const response = await fetch(`${REALTIME_SERVER_URL}${path}`, { ...options, headers });
+
+    let response;
+    try {
+        response = await fetch(`${REALTIME_SERVER_URL}${path}`, {
+            ...options,
+            headers,
+            cache: options.cache || "no-store"
+        });
+    } catch(err) {
+        console.error("[API] Network/CORS error:", path, err);
+        const msg = String(err?.message || err || "Network error");
+        throw new Error(
+            msg.toLowerCase().includes("failed to fetch") || msg.toLowerCase().includes("network")
+                ? `Backend tidak dapat diakses. Periksa CORS FRONTEND_ORIGINS dan URL Railway (${REALTIME_SERVER_URL}).`
+                : msg
+        );
+    }
+
     let data = {};
-    try { data = await response.json(); } catch(_) {}
+    const contentType = response.headers.get("content-type") || "";
+    if(contentType.includes("application/json")) {
+        try { data = await response.json(); } catch(_) {}
+    } else {
+        try {
+            const text = await response.text();
+            if(text) data = { message: text.slice(0, 300) };
+        } catch(_) {}
+    }
+
     if(response.status === 401 && admin) {
         adminToken = "";
         adminTokenExpiresAt = "";
@@ -1180,7 +1219,10 @@ async function apiRequest(path, options = {}, admin = false) {
         tampilHalaman("halamanMasuk");
         throw new Error(data.message || "Session Admin berakhir. Silakan login kembali.");
     }
-    if(!response.ok || data.ok === false) throw new Error(data.message || `HTTP ${response.status}`);
+
+    if(!response.ok || data.ok === false) {
+        throw new Error(data.message || `HTTP ${response.status}`);
+    }
     return data;
 }
 
@@ -1191,7 +1233,9 @@ async function daftarAkun() {
     if(nama.length < 2) return toast("❌ Nama minimal 2 karakter!", "merah");
     if(sandi.length < 4) return toast("❌ Kata sandi minimal 4 karakter!", "merah");
     try {
-        await apiRequest('/api/auth/register', { method:'POST', body:JSON.stringify({nama,sandi}) });
+        const data = await apiRequest('/api/auth/register', { method:'POST', body:JSON.stringify({nama,sandi}) });
+        if(data?.ok !== true) throw new Error("Respons pendaftaran backend tidak valid.");
+        console.log("[AUTH] REGISTER OK:", nama);
         document.getElementById("regNama").value = "";
         document.getElementById("regPass").value = "";
         toast("✅ Berhasil Daftar ke server! Silakan masuk.", "hijau");
@@ -1229,9 +1273,11 @@ async function masukSistem() {
     }
     try {
         const data = await apiRequest('/api/auth/login', { method:'POST', body:JSON.stringify({nama,sandi}) });
+        if(!data?.user?.nama) throw new Error("Respons login backend tidak valid: data user tidak ditemukan.");
         userLoginPassword = sandi; // memory-only; tidak disimpan ke browser storage
-        userToken = data.token || "";
-        sessionStorage.setItem("kgUserToken", userToken);
+        userToken = String(data.token || "");
+        if(userToken) sessionStorage.setItem("kgUserToken", userToken);
+        else sessionStorage.removeItem("kgUserToken");
         namaSaya = data.user.nama;
         tampilHalaman("halamanDaftar");
         await muatGroupsPostgreSQL(true);
@@ -2301,7 +2347,15 @@ function initRealtimeSocket() {
         toast("⚠️ URL backend realtime belum diatur.", "merah", 7000);
         return false;
     }
-    socket = io(REALTIME_SERVER_URL, { transports:["websocket","polling"], reconnection:true, timeout:8000 });
+    socket = io(REALTIME_SERVER_URL, {
+        transports:["websocket","polling"],
+        reconnection:true,
+        reconnectionAttempts:Infinity,
+        reconnectionDelay:800,
+        timeout:8000,
+        // A1.4/A1.5: authenticate the Socket.IO handshake with the user token.
+        auth: userToken ? { token: userToken } : {}
+    });
     socket.on("connect", () => { realtimeConnected = true; if(peerIdSaya) joinRealtimeRoom(); });
     socket.on("disconnect", () => { realtimeConnected = false; });
     socket.on("server:ready", data => console.log("Realtime server ready", data));
@@ -2368,7 +2422,14 @@ function joinRealtimeRoom() {
     if(!socket || !realtimeConnected || !peerIdSaya) return;
     const grup = ambilData("daftarGrup").find(g => g.nama === grupAktif);
     const ch = grup?.channel?.find(c => c.nama === channelAktif);
-    socket.emit("room:join", { nama:namaSaya, group:grupAktif, channel:channelAktif, peerId:peerIdSaya, maxUsers:ch?.maxUsers || 0, token:userToken });
+    socket.emit("room:join", {
+        nama:namaSaya,
+        group:grupAktif,
+        channel:channelAktif,
+        peerId:peerIdSaya,
+        maxUsers:ch?.maxUsers || 0,
+        token:userToken
+    });
 }
 function syncPresenceToServer() {
     if(socket && realtimeConnected) socket.emit("presence:update", { micStatus:micAktif, floorStatus:myFloorStatus });
