@@ -12,12 +12,15 @@ const scryptAsync = promisify(crypto.scrypt);
 const app = express();
 const server = http.createServer(app);
 const PORT = Number(process.env.PORT || 3000);
+if (!Number.isInteger(PORT) || PORT < 1 || PORT > 65535) {
+  throw new Error(`PORT tidak valid: ${process.env.PORT}`);
+}
 const FRONTEND_ORIGINS = (process.env.FRONTEND_ORIGINS || '')
   .split(',')
   .map(s => s.trim())
   .filter(Boolean);
 const ADMIN_NAME = process.env.ADMIN_NAME || 'Didik Suntoro';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
+const ADMIN_PASSWORD = String(process.env.ADMIN_PASSWORD || '').trim();
 
 // ===== CORS / FRONTEND ACCESS =====
 // Production frontend is explicitly allowed. Keep the old frontend origin
@@ -63,7 +66,43 @@ app.use(cors(corsOptions));
 app.options(/.*/, cors(corsOptions));
 app.use(express.json({ limit: '64kb' }));
 
+// ===== HEALTH / ROOT =====
+// Keep both endpoints: /health for platform checks and /api/health for frontend checks.
+app.get('/', (req,res) => {
+  res.status(200).json({
+    ok:true,
+    service:'Komunikasi Group V2 Backend',
+    version:'2.4.1-E / A1.5 + CORS/Health/Security Patch'
+  });
+});
+
+app.get('/api/health', async (req,res) => {
+  let database='disabled';
+  let statusCode=200;
+  if (db) {
+    try {
+      await db.query('SELECT 1');
+      database='connected';
+    } catch (e) {
+      database='error';
+      statusCode=503;
+      console.error('[HEALTH] PostgreSQL:', e.message);
+    }
+  }
+  res.status(statusCode).json({
+    ok: statusCode === 200,
+    service:'komunikasi-group-v2-backend',
+    version:'2.4.1-E / A1.5 + CORS/Health/Security Patch',
+    database,
+    port:PORT,
+    time:new Date().toISOString()
+  });
+});
+
 console.log('[CORS] Allowed origins:', ALLOWED_CORS_ORIGINS.join(', '));
+if (!ADMIN_PASSWORD) {
+  console.error('[SECURITY] ADMIN_PASSWORD belum di-set di Railway Variables. Admin login dinonaktifkan sampai secret tersedia.');
+}
 
 let db = null;
 if (process.env.DATABASE_URL) {
@@ -78,7 +117,11 @@ async function hashPassword(password) {
 }
 async function verifyPassword(password, stored) {
   if (!stored) return false;
-  if (!stored.startsWith('scrypt$')) return crypto.timingSafeEqual(Buffer.from(String(password)), Buffer.from(String(stored)));
+  if (!stored.startsWith('scrypt$')) {
+    const a = Buffer.from(String(password));
+    const b = Buffer.from(String(stored));
+    return a.length === b.length && crypto.timingSafeEqual(a, b);
+  }
   const [, salt, hex] = stored.split('$');
   const derived = Buffer.from(await scryptAsync(password, salt, 64));
   const expected = Buffer.from(hex, 'hex');
@@ -126,7 +169,10 @@ async function requireAdminToken(req,res,next) {
 }
 async function requireAdminAny(req,res,next) {
   if (adminBearerToken(req)) return requireAdminToken(req,res,next);
-  if (isAdminRequest(req)) { req.adminSession={admin_name:ADMIN_NAME,legacy:true}; return next(); }
+  if (ADMIN_PASSWORD && isAdminRequest(req)) {
+    req.adminSession={admin_name:ADMIN_NAME,legacy:true};
+    return next();
+  }
   return res.status(401).json({ok:false,message:'Admin tidak terautentikasi'});
 }
 async function auditAdmin(adminSession, action, target='', detail='') {
@@ -139,7 +185,10 @@ function publicUser(row) {
   return { id: row.id, nama: row.username, role: row.role || 'user', status: row.active ? 'aktif' : 'nonaktif', banned: !!row.banned, muted: !!row.muted, dibuatOleh: row.created_by || 'system', tanggalDibuat: row.created_at ? new Date(row.created_at).toLocaleDateString('id-ID') : '-' };
 }
 function requireDb(res) { if (db) return true; res.status(503).json({ok:false,message:'Database belum tersedia'}); return false; }
-function isAdminRequest(req) { return req.get('x-admin-name') === ADMIN_NAME && req.get('x-admin-password') === ADMIN_PASSWORD; }
+function isAdminRequest(req) {
+  if (!ADMIN_PASSWORD) return false;
+  return req.get('x-admin-name') === ADMIN_NAME && req.get('x-admin-password') === ADMIN_PASSWORD;
+}
 function requireAdmin(req,res,next) { if (!isAdminRequest(req)) return res.status(401).json({ok:false,message:'Admin tidak terautentikasi'}); next(); }
 
 async function testDatabase() {
@@ -200,8 +249,13 @@ async function initializeDatabase() {
       ['groups', JSON.stringify(defaultGroups), 'system']
     );
 
-    const adminHash = await hashPassword(ADMIN_PASSWORD);
-    await db.query(`INSERT INTO users(username,password_hash,role,active,banned,muted,created_by) VALUES($1,$2,'admin',TRUE,FALSE,FALSE,'system') ON CONFLICT(username) DO UPDATE SET role='admin'`, [ADMIN_NAME, adminHash]);
+    if (ADMIN_PASSWORD) {
+      const adminHash = await hashPassword(ADMIN_PASSWORD);
+      await db.query(`INSERT INTO users(username,password_hash,role,active,banned,muted,created_by) VALUES($1,$2,'admin',TRUE,FALSE,FALSE,'system') ON CONFLICT(username) DO UPDATE SET role='admin'`, [ADMIN_NAME, adminHash]);
+      console.log('[DB] Admin account synchronized.');
+    } else {
+      console.warn('[SECURITY] ADMIN_PASSWORD kosong; admin account seed/update dilewati.');
+    }
     console.log('[DB] Database tables READY.');
   } catch(e) { console.error('[DB] Database initialization ERROR:', e.message); }
 }
@@ -275,7 +329,15 @@ async function savePresence(s){ if(!db||!s)return; try{await db.query(`INSERT IN
 async function removePresence(id){if(!db)return;try{await db.query(`DELETE FROM online_sessions WHERE socket_id=$1`,[id]);}catch(e){console.error('[DB] removePresence:',e.message);}}
 function emitPresence(){io.emit('presence:update',publicSessions());}
 
-app.get('/health',async(req,res)=>{let database='disabled';if(db){try{await db.query('SELECT 1');database='connected';}catch{database='error';}}res.json({ok:true,service:'komunikasi-group-realtime',version:'2.4.1-E-A1.5',database,time:new Date().toISOString(),users:sessions.size});});
+app.get('/health',async(req,res)=>{
+  let database='disabled';
+  let statusCode=200;
+  if(db){
+    try{await db.query('SELECT 1');database='connected';}
+    catch(e){database='error';statusCode=503;console.error('[HEALTH] PostgreSQL:',e.message);}
+  }
+  res.status(statusCode).json({ok:statusCode===200,service:'komunikasi-group-realtime',version:'2.4.1-E-A1.5+CORS-HEALTH-SECURITY-PATCH',database,time:new Date().toISOString(),users:sessions.size});
+});
 
 // ===== ADMIN SYNC STAGE B: PostgreSQL Group/Channel API =====
 app.get('/api/config/groups', async (req,res) => {
@@ -457,7 +519,7 @@ io.on('connection',socket=>{
   if(socketUser){
     socket.emit('auth:ready',{ok:true,user:publicUser(socketUser)});
   }
-  console.log('[SOCKET] Connected:',socket.id); socket.emit('server:ready',{version:'2.4.1-E-A1.5',transport:socket.conn.transport.name});
+  console.log('[SOCKET] Connected:',socket.id); socket.emit('server:ready',{version:'2.4.1-E-A1.5+CORS-HEALTH-SECURITY-PATCH',transport:socket.conn.transport.name});
   socket.on('room:join',async payload=>{try{
     const namaPayload=String(payload?.nama||'').trim(),group=String(payload?.group||'').trim(),channel=String(payload?.channel||'').trim(),peerId=String(payload?.peerId||'').trim(),maxUsers=Number(payload?.maxUsers||0);
     if(!namaPayload||!group||!channel||!peerId)return socket.emit('room:error',{message:'Data room tidak lengkap.'});
@@ -476,7 +538,7 @@ io.on('connection',socket=>{
     const adminToken=String(socket.handshake?.auth?.adminToken||'').trim();
     let admin=socket.data.admin||null;
     if(!admin && adminToken && db) admin=await getAdminFromToken(adminToken);
-    const legacyAllowed=String(process.env.LEGACY_ADMIN_SOCKET_KICK||'true').toLowerCase()==='true';
+    const legacyAllowed=String(process.env.LEGACY_ADMIN_SOCKET_KICK||'false').toLowerCase()==='true';
     if(!admin && !legacyAllowed) return ack?.({ok:false,message:'Admin Socket Token diperlukan.'});
     if(!admin && legacyAllowed) console.warn('[SECURITY] Legacy admin:kick accepted; migrate Web V2 to Admin Token.');
     kicked.set(nama,Date.now()+300000);
@@ -491,5 +553,5 @@ io.on('connection',socket=>{
 });
 setInterval(async()=>{const cutoff=Date.now()-65000;for(const[id,s]of sessions)if(s.timestamp<cutoff){rooms.get(s.room)?.delete(id);sessions.delete(id);await removePresence(id);}emitPresence();},15000);
 
-async function startServer(){console.log('========================================');console.log(' Komunikasi Group V2 Backend');console.log(' Version 2.4.1-E / A1.5');console.log('========================================');await testDatabase();await initializeDatabase();server.listen(PORT,()=>{console.log(`[SERVER] Listening on port ${PORT}`);console.log(`[SERVER] PostgreSQL: ${db?'ENABLED':'DISABLED'}`);});}
+async function startServer(){console.log('========================================');console.log(' Komunikasi Group V2 Backend');console.log(' Version 2.4.1-E / A1.5 + CORS/Health/Security Patch');console.log('========================================');await testDatabase();await initializeDatabase();server.listen(PORT,()=>{console.log(`[SERVER] Listening on port ${PORT}`);console.log(`[SERVER] PostgreSQL: ${db?'ENABLED':'DISABLED'}`);});}
 startServer();
