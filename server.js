@@ -17,7 +17,7 @@ const FRONTEND_ORIGINS = (process.env.FRONTEND_ORIGINS || '')
   .map(s => s.trim())
   .filter(Boolean);
 const ADMIN_NAME = process.env.ADMIN_NAME || 'Didik Suntoro';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'D1d1kSunt0r0@#$';
 
 // ===== CORS / FRONTEND ACCESS =====
 // Production frontend is explicitly allowed. Keep the old frontend origin
